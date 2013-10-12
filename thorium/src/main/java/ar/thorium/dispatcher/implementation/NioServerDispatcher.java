@@ -1,13 +1,13 @@
 package ar.thorium.dispatcher.implementation;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.SelectorGuard;
-import ar.edu.itba.it.pdc.jabxy.network.handler.HandlerFutureTask;
-import ar.edu.itba.it.pdc.jabxy.network.handler.ServerEventHandler;
-import ar.edu.itba.it.pdc.jabxy.network.handler.ServerHandlerAdapter;
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueueFactory;
-import ar.edu.itba.it.pdc.jabxy.network.queues.OutputQueueFactory;
-import ar.edu.itba.it.pdc.jabxy.network.queues.exceptions.QueueBuildingException;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
+import ar.thorium.dispatcher.SelectorGuard;
+import ar.thorium.handler.HandlerFutureTask;
+import ar.thorium.handler.ServerEventHandler;
+import ar.thorium.handler.ServerHandlerAdapter;
+import ar.thorium.queues.InputQueueFactory;
+import ar.thorium.queues.OutputQueueFactory;
+import ar.thorium.queues.exceptions.QueueBuildingException;
+import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

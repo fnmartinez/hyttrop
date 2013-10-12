@@ -1,8 +1,8 @@
 package ar.thorium.queues;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.exceptions.QueueBuildingException;
-import ar.edu.itba.it.pdc.jabxy.network.queues.implementations.XMLInputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.exceptions.QueueBuildingException;
+import ar.thorium.queues.implementations.XMLInputQueue;
+import ar.thorium.utils.BufferFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;

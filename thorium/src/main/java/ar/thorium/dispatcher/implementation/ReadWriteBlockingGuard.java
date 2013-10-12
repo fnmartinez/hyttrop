@@ -1,6 +1,6 @@
 package ar.thorium.dispatcher.implementation;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.SelectorGuard;
+import ar.thorium.dispatcher.SelectorGuard;
 
 import java.nio.channels.Selector;
 import java.util.concurrent.locks.ReadWriteLock;

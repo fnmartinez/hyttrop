@@ -1,10 +1,10 @@
 package ar.thorium.handler;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.Dispatcher;
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.queues.OutputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ServerChannelFacade;
+import ar.thorium.dispatcher.Dispatcher;
+import ar.thorium.queues.InputQueue;
+import ar.thorium.queues.OutputQueue;
+import ar.thorium.utils.ChannelFacade;
+import ar.thorium.utils.ServerChannelFacade;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -37,7 +37,7 @@ public class ServerHandlerAdapter<T extends ServerEventHandler> extends
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see ar.edu.itba.it.pdc.jabxy.network.handler.HandlerAdapter#call()
+	 * @see ar.thorium.handler.HandlerAdapter#call()
 	 */
 	@Override
 	public HandlerAdapter<T> call() throws IOException {

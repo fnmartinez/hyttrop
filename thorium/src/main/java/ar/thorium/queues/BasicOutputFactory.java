@@ -1,7 +1,7 @@
 package ar.thorium.queues;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.implementations.BasicOutputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.implementations.BasicOutputQueue;
+import ar.thorium.utils.BufferFactory;
 
 public class BasicOutputFactory extends OutputQueueFactory {
 

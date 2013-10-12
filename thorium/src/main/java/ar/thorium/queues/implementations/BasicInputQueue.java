@@ -1,7 +1,7 @@
 package ar.thorium.queues.implementations;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.InputQueue;
+import ar.thorium.utils.BufferFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

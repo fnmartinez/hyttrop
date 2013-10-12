@@ -1,11 +1,11 @@
 package ar.thorium.acceptor.implementations;
 
-import ar.edu.itba.it.pdc.jabxy.network.acceptor.Acceptor;
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.Dispatcher;
-import ar.edu.itba.it.pdc.jabxy.network.handler.EventHandler;
-import ar.edu.itba.it.pdc.jabxy.network.handler.EventHandlerFactory;
-import ar.edu.itba.it.pdc.jabxy.network.handler.HandlerAdapter;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
+import ar.thorium.acceptor.Acceptor;
+import ar.thorium.dispatcher.Dispatcher;
+import ar.thorium.handler.EventHandler;
+import ar.thorium.handler.EventHandlerFactory;
+import ar.thorium.handler.HandlerAdapter;
+import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

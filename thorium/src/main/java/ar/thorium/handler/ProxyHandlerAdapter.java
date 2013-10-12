@@ -1,10 +1,10 @@
 package ar.thorium.handler;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.Dispatcher;
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.implementation.NioProxyDispatcher;
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.queues.OutputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ProxyChannelFacade;
+import ar.thorium.dispatcher.Dispatcher;
+import ar.thorium.dispatcher.implementation.NioProxyDispatcher;
+import ar.thorium.queues.InputQueue;
+import ar.thorium.queues.OutputQueue;
+import ar.thorium.utils.ProxyChannelFacade;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;

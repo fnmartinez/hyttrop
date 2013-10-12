@@ -1,7 +1,7 @@
 package ar.thorium.queues.implementations;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.MessageValidator;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.MessageValidator;
+import ar.thorium.utils.BufferFactory;
 
 import java.nio.ByteBuffer;
 

@@ -1,7 +1,7 @@
 package ar.thorium.handler;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.Dispatcher;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
+import ar.thorium.dispatcher.Dispatcher;
+import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.nio.channels.SelectionKey;

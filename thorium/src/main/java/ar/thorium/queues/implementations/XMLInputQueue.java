@@ -1,8 +1,8 @@
 package ar.thorium.queues.implementations;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.queues.XMLValidator;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.InputQueue;
+import ar.thorium.queues.XMLValidator;
+import ar.thorium.utils.BufferFactory;
 import com.google.common.base.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.xml.sax.Attributes;

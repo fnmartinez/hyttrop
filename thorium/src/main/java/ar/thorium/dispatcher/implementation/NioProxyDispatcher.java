@@ -1,13 +1,13 @@
 package ar.thorium.dispatcher.implementation;
 
-import ar.edu.itba.it.pdc.jabxy.network.dispatcher.SelectorGuard;
-import ar.edu.itba.it.pdc.jabxy.network.handler.HandlerFutureTask;
-import ar.edu.itba.it.pdc.jabxy.network.handler.ProxyEventHandler;
-import ar.edu.itba.it.pdc.jabxy.network.handler.ProxyHandlerAdapter;
-import ar.edu.itba.it.pdc.jabxy.network.queues.InputQueueFactory;
-import ar.edu.itba.it.pdc.jabxy.network.queues.OutputQueueFactory;
-import ar.edu.itba.it.pdc.jabxy.network.queues.exceptions.QueueBuildingException;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ProxyChannelFacade;
+import ar.thorium.dispatcher.SelectorGuard;
+import ar.thorium.handler.HandlerFutureTask;
+import ar.thorium.handler.ProxyEventHandler;
+import ar.thorium.handler.ProxyHandlerAdapter;
+import ar.thorium.queues.InputQueueFactory;
+import ar.thorium.queues.OutputQueueFactory;
+import ar.thorium.queues.exceptions.QueueBuildingException;
+import ar.thorium.utils.ProxyChannelFacade;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 

@@ -1,7 +1,7 @@
 package ar.thorium.queues;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.implementations.BasicInputQueue;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
+import ar.thorium.queues.implementations.BasicInputQueue;
+import ar.thorium.utils.BufferFactory;
 
 public class BasicInputQueueFactory extends InputQueueFactory {
 

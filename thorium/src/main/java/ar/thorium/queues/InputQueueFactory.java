@@ -1,8 +1,8 @@
 package ar.thorium.queues;
 
-import ar.edu.itba.it.pdc.jabxy.network.queues.exceptions.QueueBuildingException;
-import ar.edu.itba.it.pdc.jabxy.network.utils.BufferFactory;
-import ar.edu.itba.it.pdc.jabxy.network.utils.SimpleBufferFactory;
+import ar.thorium.queues.exceptions.QueueBuildingException;
+import ar.thorium.utils.BufferFactory;
+import ar.thorium.utils.SimpleBufferFactory;
 
 public abstract class InputQueueFactory {
 	

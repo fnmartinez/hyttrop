@@ -1,6 +1,6 @@
 package ar.thorium.handler;
 
-import ar.edu.itba.it.pdc.jabxy.network.utils.ProxyChannelFacade;
+import ar.thorium.utils.ProxyChannelFacade;
 
 import java.nio.ByteBuffer;
 

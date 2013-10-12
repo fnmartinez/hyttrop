@@ -1,8 +1,8 @@
 package ar.thorium.dispatcher;
 
-import ar.edu.itba.it.pdc.jabxy.network.handler.EventHandler;
-import ar.edu.itba.it.pdc.jabxy.network.handler.HandlerAdapter;
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
+import ar.thorium.handler.EventHandler;
+import ar.thorium.handler.HandlerAdapter;
+import ar.thorium.utils.ChannelFacade;
 
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;

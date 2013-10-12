@@ -1,6 +1,6 @@
 package ar.thorium.queues;
 
-import ar.edu.itba.it.pdc.jabxy.network.utils.ChannelFacade;
+import ar.thorium.utils.ChannelFacade;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
