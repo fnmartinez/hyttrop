@@ -4,7 +4,6 @@ import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.queues.InputQueue;
 import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.ChannelFacade;
-import ar.thorium.utils.ServerChannelFacade;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -16,7 +15,7 @@ import java.nio.channels.SocketChannel;
 
 public class ServerHandlerAdapter<T extends ServerEventHandler> extends
 		AbstractHandlerAdapter<T, ChannelFacade, ServerHandlerAdapter<T>>
-		implements ServerChannelFacade {
+		implements ChannelFacade {
 
 	private final Object stateChangeLock = new Object();
 	private boolean shuttingDown = false;

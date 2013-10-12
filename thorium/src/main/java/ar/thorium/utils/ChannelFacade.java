@@ -8,4 +8,6 @@ public interface ChannelFacade {
 	OutputQueue outputQueue();
 	void enableWriting();
 	void enableReading();
+    int getInterestOps();
+    void modifyInterestOps(int opsToSet, int opsToReset);
 }
