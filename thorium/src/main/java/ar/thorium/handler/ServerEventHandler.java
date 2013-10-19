@@ -7,4 +7,6 @@ public interface ServerEventHandler extends EventHandler{
 	ByteBuffer nextMessage(ChannelFacade channelFacade);
 	void handleInput(ByteBuffer message, ChannelFacade channelFacade);
     void handleConnection(ChannelFacade facade);
+    void handleWrite(ChannelFacade channelFacade);
+    void handleRead(ChannelFacade channelFacade, Message message);
 }

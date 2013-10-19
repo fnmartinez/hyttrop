@@ -6,10 +6,12 @@ import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.ChannelFacade;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 
 public class ClientHandlerAdapter<T extends ClientEventHandler>
         extends AbstractHandlerAdapter<T, ChannelFacade, ClientHandlerAdapter<T>>
@@ -19,6 +21,7 @@ public class ClientHandlerAdapter<T extends ClientEventHandler>
     protected SelectionKey key;
     protected int interestOps = 0;
     protected SelectableChannel channel;
+    private boolean shuttingDown = false;
 
     public ClientHandlerAdapter(Dispatcher<T, ChannelFacade, ClientHandlerAdapter<T>> dispatcher, InputQueue inputQueue, OutputQueue outputQueue, T eventHandler) {
         super(dispatcher, inputQueue, outputQueue, eventHandler);
@@ -48,34 +51,63 @@ public class ClientHandlerAdapter<T extends ClientEventHandler>
         return this;
     }
 
+    private void enableReadSelection() {
+        modifyInterestOps(SelectionKey.OP_READ, 0);
+    }
+
+    private void enableWriteSelection() {
+        modifyInterestOps(SelectionKey.OP_WRITE, 0);
+    }
+
+    private void disableReadSelection() {
+        modifyInterestOps(0, SelectionKey.OP_READ);
+    }
+
+    private void disableWriteSelection() {
+        modifyInterestOps(0, SelectionKey.OP_WRITE);
+    }
+
     @Override
     public void prepareToRun(SelectionKey key) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        synchronized (stateChangeLock) {
+            if (key.equals(this.key)) {
+                interestOps = key.interestOps();
+                readyOps = key.readyOps();
+                running = true;
+            } else {
+                throw new IllegalArgumentException("This is not my key");
+            }
+        }
     }
 
     @Override
     public void confirmSelection(Object handle) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (key != null && key.equals(this.key) && key.isValid()) {
+            key.interestOps(interestOps);
+        }
     }
 
     @Override
     public void enableWriting() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // TODO Auto-generated method stub
+        enableWriteSelection();
+        issueChange(key);
     }
 
     @Override
     public void enableReading() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        enableReadSelection();
+        issueChange(key);
     }
 
     @Override
     public int getInterestOps() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return interestOps;
     }
 
     @Override
     public void modifyInterestOps(int opsToSet, int opsToReset) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.interestOps = modifyInterestOps(interestOps, opsToSet, opsToReset);
     }
 
     public void setKey(SelectionKey key) {
@@ -106,7 +138,33 @@ public class ClientHandlerAdapter<T extends ClientEventHandler>
         }
     }
 
-    private void disableWriteSelection() {
-        modifyInterestOps(0, SelectionKey.OP_WRITE);
+    private void fillInput() throws IOException {
+        if (shuttingDown)
+            return;
+
+        int rc = inputQueue.fillFrom((ByteChannel) channel);
+
+        if (rc == -1) {
+            disableReadSelection();
+
+            if (channel instanceof SocketChannel) {
+                SocketChannel sc = (SocketChannel) channel;
+
+                if (sc.socket().isConnected()) {
+                    try {
+                        sc.socket().shutdownInput();
+                    } catch (SocketException e) {
+                        // happens sometimes, ignore
+                    }
+                }
+            }
+
+            shuttingDown = true;
+            eventHandler.stopping(this);
+
+            // cause drainOutput to run, which will close
+            // the socket if/when the output queue is empty
+            enableWriteSelection();
+        }
     }
 }
