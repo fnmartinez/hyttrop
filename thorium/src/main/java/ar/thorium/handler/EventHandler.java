@@ -4,8 +4,7 @@ import ar.thorium.utils.ChannelFacade;
 
 
 public interface EventHandler {
-	void starting(ChannelFacade channelFacade);
-	void started(ChannelFacade channelFacade);
-	void stopping(ChannelFacade channelFacade);
-	void stopped(ChannelFacade channelFacade);
+	void handleInput(Message message, ChannelFacade channelFacade);
+    void handleConnection(ChannelFacade channelFacade);
+    void stopped(ChannelFacade channelFacade);
 }

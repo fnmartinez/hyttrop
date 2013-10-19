@@ -22,10 +22,10 @@ import java.util.List;
  * Acceptor implementation for a single dispatcher type.
  * 
  */
-public class BasicSocketAcceptor<H extends EventHandler, F extends ChannelFacade, A extends HandlerAdapter<H>> implements Acceptor {
+public class BasicSocketAcceptor implements Acceptor {
 
-	private final Dispatcher<H,F,A> dispatcher;
-	private final EventHandlerFactory<H> eventHandlerFactory;
+	private final Dispatcher dispatcher;
+	private final EventHandlerFactory eventHandlerFactory;
 	private final ServerSocketChannel listenSocket;
 	private final Listener listener;
 	private final List<Thread> threads = new ArrayList<Thread>();
@@ -33,12 +33,12 @@ public class BasicSocketAcceptor<H extends EventHandler, F extends ChannelFacade
 	private volatile boolean running = true;
 
 	public BasicSocketAcceptor(int port,
-			EventHandlerFactory<H> eventHandlerFactory, Dispatcher<H,F,A> dispatcher) throws IOException {
+			EventHandlerFactory eventHandlerFactory, Dispatcher dispatcher) throws IOException {
 		this(new InetSocketAddress(port), eventHandlerFactory, dispatcher);
 	}
 	
 	public BasicSocketAcceptor(InetSocketAddress listenAddress,
-			EventHandlerFactory<H> eventHandlerFactory, Dispatcher<H,F,A> dispatcher) throws IOException{
+			EventHandlerFactory eventHandlerFactory, Dispatcher dispatcher) throws IOException{
 		this.dispatcher = dispatcher;
 		this.eventHandlerFactory = eventHandlerFactory;
 		this.listenSocket = ServerSocketChannel.open();

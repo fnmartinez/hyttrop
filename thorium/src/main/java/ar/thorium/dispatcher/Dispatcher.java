@@ -7,18 +7,18 @@ import ar.thorium.utils.ChannelFacade;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 
-public interface Dispatcher<H extends EventHandler, F extends ChannelFacade, A extends HandlerAdapter<H>> {
+public interface Dispatcher {
 
 	void dispatch() throws IOException;
 
 	void shutdown();
 
-	F registerChannel(SelectableChannel channel,
-                      H handler) throws IOException;
+	ChannelFacade registerChannel(SelectableChannel channel,
+                      EventHandler handler) throws IOException;
 
-	void unregisterChannel(F key);
+	void unregisterChannel(ChannelFacade key);
 
-	void enqueueStatusChange(A adapter, Object handle);
+	void enqueueStatusChange(HandlerAdapter adapter, Object handle);
 
 	Thread start();
 }

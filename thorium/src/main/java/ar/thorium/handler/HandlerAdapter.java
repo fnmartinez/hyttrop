@@ -1,70 +1,233 @@
 package ar.thorium.handler;
 
+import ar.thorium.dispatcher.Dispatcher;
+import ar.thorium.queues.InputQueue;
+import ar.thorium.queues.OutputQueue;
+import ar.thorium.utils.ChannelFacade;
+
+import java.io.IOException;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.Callable;
 
-public interface HandlerAdapter<T extends EventHandler> extends
-		Callable<HandlerAdapter<T>> {
+public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
-	void prepareToRun(SelectionKey key);
+    private final Dispatcher dispatcher;
+    private final InputQueue inputQueue;
+    private final OutputQueue outputQueue;
+    private final Object stateChangeLock = new Object();
+    private SelectableChannel channel;
+    private EventHandler eventHandler;
+    private SelectionKey key;
+    private volatile boolean running = false;
+    private volatile boolean dead = false;
+    private boolean shuttingDown = false;
+    private int interestOps = 0;
+    private int readyOps = 0;
 
-	/**
-	 * Called in order to collect the channels and keys that this
-	 * adapter has.
-	 * @return if this adapter is still usable
-	 */
-	boolean isDead();
+    public HandlerAdapter(Dispatcher dispatcher, InputQueue inputQueue,
+                          OutputQueue outputQueue, EventHandler clientHandler) {
+        this.dispatcher = dispatcher;
+        this.inputQueue = inputQueue;
+        this.outputQueue = outputQueue;
+        this.eventHandler = eventHandler;
+    }
+    @Override
+    public HandlerAdapter call() throws IOException {
+        try {
+            // TODO cambiar para que cuando se llame, ejecute la acción corerspondiente. Switch?
+        } finally {
+            synchronized (stateChangeLock) {
+                this.running = false;
+            }
+        }
 
-	/**
-	 * Called when registering, but before the handler is active
-	 */
-	void registering();
+        return this;
+    }
 
-	/**
-	 *  Called when the handler is registered, but before the first message
-	 */
-	void registered();
+    // --------------------------------------------------
+    // Private helper methods
 
-	/**
-	 * Called when unregistration has been requested, but while the
-	 * handler is still active and able to interact with the framework.
-	 * Extension Point: This implementation simply calls through to
-	 * the client handler, which may or may not be running. Either
-	 * the client code must take steps to protect its internal state,
-	 * or logic could be added here to wait until the handler finishes.
-	 */
-	void unregistering();
+    // These three methods manipulate the private copy of the selection
+    // interest flags. Upon completion, this local copy will be copied
+    // back to the SelectionKey as the new interest set.
+    private void enableWriteSelection() {
+        modifyInterestOps(SelectionKey.OP_WRITE, 0);
+    }
 
-	/**
-	 * Called when the handler has been unregistered and is no longer active.
-	 * If unregistering() waits for the handler to finish, then this
-	 * one should be safe. If not, then this function has the same
-	 * concurrency concerns as does unregistering().
-	 */
-	void unregistered();
+    private void disableWriteSelection() {
+        modifyInterestOps(0, SelectionKey.OP_WRITE);
+    }
 
-	/**
-	 * Called either when an unhandled exception occurred or when a connection
-	 * is finished, in order to dispose the resources that this handler has.
-	 */
-	void die();
+    private void disableReadSelection() {
+        modifyInterestOps(0, SelectionKey.OP_READ);
+    }
 
-	/**
-	 * Sets the EventHandler that this adapter adapts.
-	 * @param handler
-	 */
-	void setHandler(T handler);
+    private void enableReadSelection() {
+        modifyInterestOps(SelectionKey.OP_READ, 0);
+    }
 
-	/**
-	 * Called when the dispatcher is attending the status change issued by 
-	 * this adapter. This operation ought to change the key interest operations
-	 * that has issued the status change. The handle that is given by parameter
-	 * is the same that was used to issue the status change. Is given as an 
-	 * optional way to identify the key in case of multiples key per adapter.
-	 * @param handle representing the key that issued the status change in the
-	 * adapter. Might be null if such was given to the dispatcher when enqueing
-	 * the status change.
-	 */
-	void confirmSelection(Object handle);
+    // If there is output queued, and the channel is ready to
+    // accept data, send as much as it will take.
+    private void drainOutput() throws IOException {
+        if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
+                && (!outputQueue.isEmpty())) {
+            outputQueue.drainTo((ByteChannel) channel);
+        }
+
+        // Write selection is turned on when output data in enqueued,
+        // turn it off when the queue becomes empty.
+        if (outputQueue.isEmpty()) {
+            disableWriteSelection();
+
+            if (shuttingDown) {
+                channel.close();
+                eventHandler.stopped(this);
+            }
+        }
+    }
+
+    // Attempt to fill the input queue with as much data as the channel
+    // can provide right now. If end-of-stream is reached, stop read
+    // selection and shutdown the input side of the channel.
+    private void fillInput() throws IOException {
+        if (shuttingDown)
+            return;
+
+        int rc = inputQueue.fillFrom((ByteChannel) channel);
+
+        if (rc == -1) {
+            disableReadSelection();
+
+            if (channel instanceof SocketChannel) {
+                SocketChannel sc = (SocketChannel) channel;
+
+                if (sc.socket().isConnected()) {
+                    try {
+                        sc.socket().shutdownInput();
+                    } catch (SocketException e) {
+                        // happens sometimes, ignore
+                    }
+                }
+            }
+
+            shuttingDown = true;
+            eventHandler.stopping(this);
+
+            // cause drainOutput to run, which will close
+            // the socket if/when the output queue is empty
+            enableWriteSelection();
+        }
+    }
+
+    public void setKey(SelectionKey key) {
+        this.key = key;
+        this.channel = key.channel();
+        interestOps = key.interestOps();
+    }
+
+    public SelectionKey key() {
+        return this.key;
+    }
+
+    public void prepareToRun(SelectionKey key) {
+        synchronized (stateChangeLock) {
+            if (key.equals(this.key)) {
+                interestOps = key.interestOps();
+                readyOps = key.readyOps();
+                running = true;
+            } else {
+                throw new IllegalArgumentException("This is not my key");
+            }
+        }
+    }
+
+    public int getInterestOps() {
+        return interestOps;
+    }
+
+    public void modifyInterestOps(int opsToSet, int opsToReset) {
+        this.interestOps = modifyInterestOps(interestOps, opsToSet, opsToReset);
+    }
+
+    public int getReadyOps() {
+        return readyOps;
+    }
+
+    public void confirmSelection(Object handle) {
+        if (key != null && key.equals(this.key) && key.isValid()) {
+            key.interestOps(interestOps);
+        }
+    }
+
+    public void enableWriting() {
+        // TODO Auto-generated method stub
+        enableWriteSelection();
+        issueChange(key);
+    }
+
+    public void enableReading() {
+        enableReadSelection();
+        issueChange(key);
+    }
+
+    public InputQueue inputQueue() {
+        return this.inputQueue;
+    }
+
+    public OutputQueue outputQueue() {
+        return this.outputQueue;
+    }
+
+    public void setHandler(EventHandler handler) {
+        this.eventHandler = handler;
+    }
+
+    public EventHandler getHandler() {
+        return this.eventHandler;
+    }
+
+    public boolean isDead() {
+        return dead;
+    }
+
+    public void registering() {
+        eventHandler.starting(this);
+    }
+
+    public void registered() {
+        eventHandler.started(this);
+
+    }
+
+    public void unregistering() {
+        eventHandler.stopping(this);
+    }
+
+    public void unregistered() {
+        eventHandler.stopped(this);
+    }
+
+    public void die() {
+        this.dead = true;
+    }
+
+    protected int modifyInterestOps(int ops, int opsToSet, int opsToReset) {
+        ops = (ops | opsToSet) & (~opsToReset);
+        return ops;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void issueChange(SelectionKey key) {
+        synchronized (stateChangeLock) {
+            if (!running) {
+                dispatcher.enqueueStatusChange((HandlerAdapter) this, key);
+            }
+        }
+    }
 
 }
