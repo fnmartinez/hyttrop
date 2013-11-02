@@ -11,5 +11,11 @@
 
     <artifactId>hyttrop</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>pdc2013b</groupId>
+            <artifactId>thorium</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>
