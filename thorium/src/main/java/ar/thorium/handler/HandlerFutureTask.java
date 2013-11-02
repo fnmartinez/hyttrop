@@ -1,32 +1,30 @@
 package ar.thorium.handler;
 
 import ar.thorium.dispatcher.Dispatcher;
-import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.nio.channels.SelectionKey;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-public class HandlerFutureTask<H extends EventHandler, F extends ChannelFacade, A extends HandlerAdapter<H>>
-		extends FutureTask<A> implements Runnable {
+public class HandlerFutureTask extends FutureTask<HandlerAdapter> implements Runnable {
 
-	private final HandlerAdapter<H> adapter;
-	private Logger logger = Logger.getLogger(HandlerFutureTask.class);
-	private Dispatcher<H,F,A> dispatcher;
+	private final HandlerAdapter adapter;
+	private final Logger logger = Logger.getLogger(HandlerFutureTask.class);
+	private final Dispatcher dispatcher;
 	private SelectionKey key;
 	
 	@SuppressWarnings("unchecked")
-	public HandlerFutureTask(A adapter, Dispatcher<H,F,A> dispatcher, SelectionKey key) {
-		super((Callable<A>) adapter);
+	public HandlerFutureTask(HandlerAdapter adapter, Dispatcher dispatcher, SelectionKey key) {
+		super(adapter);
 		this.adapter = adapter;
 		this.dispatcher = dispatcher;
+        this.key = key;
 	}
 
 	@SuppressWarnings("unchecked")
 	protected void done() {
-		dispatcher.enqueueStatusChange((A)adapter, key);
+		dispatcher.enqueueStatusChange(adapter, key);
 
 		try {
 			// Get result returned by call(), or cause

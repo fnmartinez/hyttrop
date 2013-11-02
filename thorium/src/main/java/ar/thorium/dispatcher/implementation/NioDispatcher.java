@@ -4,6 +4,7 @@ import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.dispatcher.SelectorGuard;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.handler.HandlerAdapter;
+import ar.thorium.handler.HandlerFutureTask;
 import ar.thorium.queues.InputQueueFactory;
 import ar.thorium.queues.OutputQueueFactory;
 import ar.thorium.queues.exceptions.QueueBuildingException;
@@ -23,12 +24,12 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
     private final Selector selector;
-    private final BlockingQueue<Pair<HandlerAdapter, Object>> statusChangeQueue;
+    private final BlockingQueue<Pair<HandlerAdapter, SelectionKey>> statusChangeQueue;
     private final SelectorGuard guard;
+    private final Executor executor;
+    private final InputQueueFactory inputQueueFactory;
+    private final OutputQueueFactory outputQueueFactory;
     private volatile boolean dispatching = true;
-    protected final Executor executor;
-    protected final InputQueueFactory inputQueueFactory;
-    protected final OutputQueueFactory outputQueueFactory;
 
 
     public NioDispatcher(Executor executor, SelectorGuard guard, InputQueueFactory inputQueueFactory, OutputQueueFactory outputQueueFactory) throws IOException {
@@ -37,7 +38,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         this.executor = executor;
         this.guard = guard;
 
-        statusChangeQueue = new ArrayBlockingQueue<Pair<HandlerAdapter, Object>>(100);
+        statusChangeQueue = new ArrayBlockingQueue<Pair<HandlerAdapter, SelectionKey>>(100);
         selector = Selector.open();
         this.guard.setSelector(this.selector);
     }
@@ -128,9 +129,9 @@ public class NioDispatcher implements Dispatcher, Runnable {
     }
 
     @Override
-    public void enqueueStatusChange(HandlerAdapter adapter, Object handle) {
+    public void enqueueStatusChange(HandlerAdapter adapter, SelectionKey handle) {
         boolean interrupted = false;
-        Pair<HandlerAdapter, Object> pair = new Pair<HandlerAdapter, Object>(adapter, handle);
+        Pair<HandlerAdapter, SelectionKey> pair = new Pair<HandlerAdapter, SelectionKey>(adapter, handle);
         try {
             while (true) {
                 try {
@@ -144,7 +145,8 @@ public class NioDispatcher implements Dispatcher, Runnable {
         } finally {
             if (interrupted)
                 Thread.currentThread().interrupt();
-        }    }
+        }
+    }
 
     @Override
     public Thread start() {
@@ -156,21 +158,26 @@ public class NioDispatcher implements Dispatcher, Runnable {
     }
 
     private void invokeHandler(HandlerAdapter adapter, SelectionKey key) {
+        adapter.prepareToRun(key);
+        adapter.key().interestOps(0);
+
+        executor.execute(new HandlerFutureTask(adapter, this, key));
     }
 
     private void checkStatusChangeQueue() {
-        Pair<HandlerAdapter, Object> pair;
+        Pair<HandlerAdapter, SelectionKey> pair;
 
         while ((pair = statusChangeQueue.poll()) != null) {
             HandlerAdapter adapter = pair.getObject();
-            Object handle = pair.getHandle();
+            SelectionKey handle = pair.getHandle();
 
             if (adapter.isDead()) {
-                unregisterChannel((ChannelFacade)adapter);
+                unregisterChannel(adapter);
             } else {
                 adapter.confirmSelection(handle);
             }
-        }    }
+        }
+    }
 
     @Override
     public void run() {
@@ -185,7 +192,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         for (SelectionKey key : keys) {
             HandlerAdapter adapter = (HandlerAdapter) key.attachment();
 
-            unregisterChannel((ChannelFacade)adapter);
+            unregisterChannel(adapter);
         }
 
         try {

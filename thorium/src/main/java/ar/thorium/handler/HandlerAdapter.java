@@ -7,7 +7,6 @@ import ar.thorium.utils.ChannelFacade;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -39,6 +38,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     @Override
     public HandlerAdapter call() throws IOException {
         try {
+
             // TODO cambiar para que cuando se llame, ejecute la acción corerspondiente. Switch?
         } finally {
             synchronized (stateChangeLock) {
@@ -158,7 +158,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         return readyOps;
     }
 
-    public void confirmSelection(Object handle) {
+    public void confirmSelection(SelectionKey key) {
         if (key != null && key.equals(this.key) && key.isValid()) {
             key.interestOps(interestOps);
         }

@@ -2,10 +2,7 @@ package ar.thorium.acceptor.implementations;
 
 import ar.thorium.acceptor.Acceptor;
 import ar.thorium.dispatcher.Dispatcher;
-import ar.thorium.handler.EventHandler;
 import ar.thorium.handler.EventHandlerFactory;
-import ar.thorium.handler.HandlerAdapter;
-import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -15,7 +12,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -63,25 +59,19 @@ public class BasicSocketAcceptor implements Acceptor {
 	public synchronized void shutdown() {
 		running = false;
 
-		for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
-			Thread thread = it.next();
+        for(Thread t : this.threads) {
+            if (t.isAlive()) {
+                t.interrupt();
+            }
+        }
 
-			if ((thread != null) && (thread.isAlive())) {
-				thread.interrupt();
-			}
-		}
-
-		for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
-			Thread thread = it.next();
-
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
-				// nothing
-			}
-
-			it.remove();
-		}
+        for(Thread t : this.threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                // TODO: Log!
+            }
+        }
 
 		try {
 			listenSocket.close();

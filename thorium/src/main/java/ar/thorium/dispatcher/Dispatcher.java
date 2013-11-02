@@ -6,6 +6,7 @@ import ar.thorium.utils.ChannelFacade;
 
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
 
 public interface Dispatcher {
 
@@ -18,7 +19,7 @@ public interface Dispatcher {
 
 	void unregisterChannel(ChannelFacade key);
 
-	void enqueueStatusChange(HandlerAdapter adapter, Object handle);
+	void enqueueStatusChange(HandlerAdapter adapter, SelectionKey handle);
 
 	Thread start();
 }
