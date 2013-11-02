@@ -4,6 +4,7 @@ import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.queues.InputQueue;
 import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.ChannelFacade;
+import ar.thorium.utils.Message;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -27,18 +28,38 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     private boolean shuttingDown = false;
     private int interestOps = 0;
     private int readyOps = 0;
+    private boolean firstCall;
 
     public HandlerAdapter(Dispatcher dispatcher, InputQueue inputQueue,
-                          OutputQueue outputQueue, EventHandler clientHandler) {
+                          OutputQueue outputQueue, EventHandler eventHandler) {
         this.dispatcher = dispatcher;
         this.inputQueue = inputQueue;
         this.outputQueue = outputQueue;
+        this.outputQueue().setChannelFacade(this);
         this.eventHandler = eventHandler;
+        this.firstCall = true;
     }
+
     @Override
     public HandlerAdapter call() throws IOException {
         try {
+            if (firstCall) {
+                eventHandler.handleConnection(this);
+                firstCall = false;
+            } else {
+                if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
+                    eventHandler.handleWrite(this);
+                    drainOutput();
 
+                }else if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
+                    fillInput();
+                    Message message;
+                    if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
+                        eventHandler.handleRead(this, message);
+                    }
+                }
+            }
+            this.enableReadSelection();
             // TODO cambiar para que cuando se llame, ejecute la acción corerspondiente. Switch?
         } finally {
             synchronized (stateChangeLock) {
@@ -193,15 +214,6 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     public boolean isDead() {
         return dead;
-    }
-
-    public void registering() {
-        eventHandler.starting(this);
-    }
-
-    public void registered() {
-        eventHandler.started(this);
-
     }
 
     public void unregistering() {

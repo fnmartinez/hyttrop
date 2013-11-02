@@ -8,20 +8,12 @@ public abstract class InputQueueFactory {
 	
 	private static BufferFactory defaultBufferFactory = new SimpleBufferFactory(1024);
 	
-	public static InputQueueFactory newInstance() {
-		return new BasicInputQueueFactory(defaultBufferFactory);
+	public static InputQueueFactory newInstance(SimpleMessageValidator validator) {
+		return new BasicInputQueueFactory(defaultBufferFactory, validator);
 	}
 	
-	public static InputQueueFactory newInstance(BufferFactory bufferFactory) {
-		return new BasicInputQueueFactory(bufferFactory);
-	}
-	
-	public static InputQueueFactory newInstance(MessageValidator validator) {
-		return new ValidatedInputQueueFactory(validator, defaultBufferFactory);
-	}
-	
-	public static InputQueueFactory newInstance(MessageValidator validator, BufferFactory bufferFactory) {
-		return new ValidatedInputQueueFactory(validator, bufferFactory);
+	public static InputQueueFactory newInstance(SimpleMessageValidator validator, BufferFactory bufferFactory) {
+		return new BasicInputQueueFactory(bufferFactory, validator);
 	}
 	
 	public abstract InputQueue newInputQueue() throws QueueBuildingException;

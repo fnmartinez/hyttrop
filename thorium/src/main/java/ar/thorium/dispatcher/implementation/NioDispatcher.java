@@ -82,16 +82,13 @@ public class NioDispatcher implements Dispatcher, Runnable {
             throw new IOException(e);
         }
 
-        adapter.registering();
-
         acquireSelector();
 
         try {
-            SelectionKey key = channel.register(getSelector(), SelectionKey.OP_READ,
+            SelectionKey key = channel.register(getSelector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE,
                     adapter);
 
             adapter.setKey(key);
-            adapter.registered();
 
             return adapter;
         } finally {

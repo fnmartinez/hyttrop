@@ -1,7 +1,10 @@
 package ar.thorium.queues.implementations;
 
 import ar.thorium.queues.InputQueue;
+import ar.thorium.queues.MessageValidator;
+import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.BufferFactory;
+import ar.thorium.utils.Message;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,18 +14,24 @@ public class BasicInputQueue implements InputQueue {
 	private final BufferFactory bufferFactory;
 	private final ByteBuffer emptyBuffer;
 	private ByteBuffer buffer = null;
+    private SimpleMessageValidator validator;
 
-	public BasicInputQueue(BufferFactory bufferFactory) {
+
+	public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
 		this.bufferFactory = bufferFactory;
 		emptyBuffer = ByteBuffer.allocate(0).asReadOnlyBuffer();
+        this.validator = validator;
 	}
 
 	public synchronized int fillFrom(ByteChannel channel) throws IOException {
 		if (buffer == null) {
 			buffer = bufferFactory.newBuffer();
 		}
-
-		return channel.read(buffer);
+        int read = channel.read(buffer);
+        if (read > 0) {
+            this.validator.putInput(this.buffer);
+        }
+		return read;
 	}
 
 	// -- not needed by framework
@@ -46,6 +55,10 @@ public class BasicInputQueue implements InputQueue {
 
 		return -1;
 	}
+
+    public int size() {
+        return this.buffer.remaining();
+    }
 
 	public synchronized ByteBuffer dequeueBytes(int count) {
 		if ((buffer == null) || (buffer.position() == 0) || (count == 0)) {
@@ -87,8 +100,13 @@ public class BasicInputQueue implements InputQueue {
 	public void discardBytes(int count) {
 		dequeueBytes(count);
 	}
-	
-	protected ByteBuffer getCurrentMessage() {
+
+    @Override
+    public Message getMessage() {
+        return this.validator.getMessage();
+    }
+
+    protected ByteBuffer getCurrentMessage() {
 		return this.buffer;
 	}
 }
