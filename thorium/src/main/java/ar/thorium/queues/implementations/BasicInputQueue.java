@@ -29,7 +29,9 @@ public class BasicInputQueue implements InputQueue {
 		}
         int read = channel.read(buffer);
         if (read > 0) {
-            this.validator.putInput(this.buffer);
+            buffer.flip();
+            this.validator.putInput(buffer.asReadOnlyBuffer());
+            this.buffer.clear();
         }
 		return read;
 	}
@@ -73,8 +75,8 @@ public class BasicInputQueue implements InputQueue {
 
 		// TODO: Validate this
 		// result.put(buffer.array(), 0, size);
-		// buffer.position (size);
-		// result.position (size);
+		// buffer.position(size);
+		// result.position(size);
 
 		// TODO: this if() should be replaceable by the above
 		if (buffer.remaining() <= result.remaining()) {

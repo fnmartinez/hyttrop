@@ -28,7 +28,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     private boolean shuttingDown = false;
     private int interestOps = 0;
     private int readyOps = 0;
-    private boolean firstCall;
+    private boolean connectionHandled;
 
     public HandlerAdapter(Dispatcher dispatcher, InputQueue inputQueue,
                           OutputQueue outputQueue, EventHandler eventHandler) {
@@ -37,15 +37,15 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         this.outputQueue = outputQueue;
         this.outputQueue().setChannelFacade(this);
         this.eventHandler = eventHandler;
-        this.firstCall = true;
+        this.connectionHandled = false;
     }
 
     @Override
     public HandlerAdapter call() throws IOException {
         try {
-            if (firstCall) {
+            if (!connectionHandled || (readyOps & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) {
                 eventHandler.handleConnection(this);
-                firstCall = false;
+                connectionHandled = true;
             } else {
                 if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
                     eventHandler.handleWrite(this);

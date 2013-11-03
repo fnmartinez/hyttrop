@@ -9,10 +9,10 @@ import ar.thorium.utils.Message;
 public class HttpMessage implements Message {
 
 	private HashMap<String, String> header;
-	private BufferedReader body;
+	private StringBuilder body;
 	
 	public HttpMessage(){
-		super();
+        this.body = new StringBuilder();
 	}
 	
 	public Set<String> getHeaderFields(){
@@ -27,16 +27,18 @@ public class HttpMessage implements Message {
 		return header.containsKey(key);
 	}
 	
-	public BufferedReader getBody(){
-		return body;
-	}
-	
+
+    public String getBody() {
+        return this.body.toString();
+    }
+
+    public void addBody(byte[] bytes) {
+        this.body.append(new String(bytes));
+    }
+
 	public void setHeader(final String field, final String content){
 		header.put(field, content);
 	}
-	
-	public void setBody(final BufferedReader body){
-		this.body = body;
-	}
+
 	
 }
