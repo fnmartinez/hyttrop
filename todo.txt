@@ -1,0 +1,9 @@
+buffering a disco
+
+mejorar los casos de testing : simil casos de uso
+
+logs útiles
+
+configurables
+
+!!! multipart, gzip y encodings, chuncked

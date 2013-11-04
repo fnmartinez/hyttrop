@@ -1,19 +1,16 @@
 package ar.edu.itba.pdc.utils;
 
+import ar.edu.itba.pdc.message.HttpMessage;
+import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.Message;
 import org.apache.commons.lang.ArrayUtils;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.regex.Pattern;
+import java.util.Arrays;
 
-/**
- * Created with IntelliJ IDEA.
- * User: facundo
- * Date: 02/11/13
- * Time: 19:48
- * To change this template use File | Settings | File Templates.
- */
 public class HttpMessageValidator implements SimpleMessageValidator {
 
     private byte[] message;
@@ -21,36 +18,60 @@ public class HttpMessageValidator implements SimpleMessageValidator {
 
     public HttpMessageValidator() {
         this.httpMessage = null;
+        this.message = new byte[0];
     }
 
     @Override
     public void putInput(ByteBuffer byteBuffer) {
-        byte[] incomming = new byte[byteBuffer.limit()];
-        byteBuffer.get(incomming);
-        message = ArrayUtils.addAll(message, incomming);
+        if (httpMessage == null) {
+            byte[] incomming = new byte[byteBuffer.limit()];
+            byteBuffer.get(incomming);
+            message = ArrayUtils.addAll(message, incomming);
+        } else {
+            message = new byte[byteBuffer.limit()];
+            byteBuffer.get(message);
+        }
     }
 
     @Override
     public Message getMessage() {
-        if (httpMessage == null) {
-            boolean messageFound = false;
-            for (int i = 0; i < message.length && !messageFound; i++) {
-                if (message[i] == (byte)'\n' && message[i+1] == (byte)'\r' && message[i+2] == (byte)'\n' && message[i+3] == (byte)'\r') {
-                    messageFound = true;
+        try {
+            if (httpMessage == null) {
+                boolean messageFound = false;
+                int i;
+                for (i = 0; i < message.length && !messageFound; i++) {
+                    if (message[i] == (byte)'\n' && message[i+1] == (byte)'\r' && message[i+2] == (byte)'\n' && message[i+3] == (byte)'\r') {
+                        messageFound = true;
+                    }
+                }
+                if (messageFound) {
+                    String[] headers = new String(message).split("\n\r");
+
+                    this.httpMessage = HttpMessage.newMessage(headers[0]);
+
+                    for(String header : headers) {
+                        String[] headerValue = header.split(":");
+                        httpMessage.setHeader(headerValue[0].trim(), headerValue[1].trim());
+                    }
+                    httpMessage.appendToBody(Arrays.copyOfRange(message, i, message.length - 1));
+                    message = new byte[0];
+                }
+            } else {
+                httpMessage.appendToBody(message);
+                message = new byte[0];
+                if (messageFinilized(httpMessage)) {
+                    httpMessage.finilize();
                 }
             }
-            if (messageFound) {
-                httpMessage = new HttpMessage();
-                String[] headers = new String(message).split("\n\r");
-                for(String header : headers) {
-                    String[] headerValue = header.split(":");
-                    httpMessage.setHeader(headerValue[0], headerValue[1]);
-                }
-            }
-        } else {
-
-
+            return httpMessage;
+        }catch (URISyntaxException e1){
+            return HttpResponseMessage.BAD_REQUEST;
+        } catch (IOException e) {
+            return HttpResponseMessage.INTERAL_SERVER_ERROR_RESPONSE;
         }
-        return httpMessage;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private boolean messageFinilized(HttpMessage httpMessage) {
+        return false;  //To change body of created methods use File | Settings | File Templates.
     }
 }

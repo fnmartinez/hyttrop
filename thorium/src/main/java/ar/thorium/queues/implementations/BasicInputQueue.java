@@ -29,6 +29,7 @@ public class BasicInputQueue implements InputQueue {
 		}
         int read = channel.read(buffer);
         if (read > 0) {
+            // TODO: esto está haciendo que isEmpty devuelva true cuando hay cosas para leer;
             buffer.flip();
             this.validator.putInput(buffer.asReadOnlyBuffer());
             this.buffer.clear();

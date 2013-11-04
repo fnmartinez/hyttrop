@@ -46,17 +46,17 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             if (!connectionHandled || (readyOps & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) {
                 eventHandler.handleConnection(this);
                 connectionHandled = true;
-            } else {
-                if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
-                    eventHandler.handleWrite(this);
-                    drainOutput();
+            }
+            if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
+                eventHandler.handleWrite(this);
+                drainOutput();
 
-                }else if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
-                    fillInput();
-                    Message message;
-                    if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
-                        eventHandler.handleRead(this, message);
-                    }
+            }
+            if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
+                fillInput();
+                Message message;
+                if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
+                    eventHandler.handleRead(this, message);
                 }
             }
             this.enableReadSelection();
