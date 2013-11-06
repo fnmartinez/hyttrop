@@ -14,6 +14,7 @@ public class BasicInputQueue implements InputQueue {
 	private final BufferFactory bufferFactory;
 	private final ByteBuffer emptyBuffer;
 	private ByteBuffer buffer = null;
+    private int bytesRead = 0;
     private SimpleMessageValidator validator;
 
 
@@ -29,10 +30,10 @@ public class BasicInputQueue implements InputQueue {
 		}
         int read = channel.read(buffer);
         if (read > 0) {
-            // TODO: esto está haciendo que isEmpty devuelva true cuando hay cosas para leer;
+            bytesRead += read;
             buffer.flip();
-            this.validator.putInput(buffer.asReadOnlyBuffer());
-            this.buffer.clear();
+            validator.putInput(buffer.asReadOnlyBuffer());
+            buffer.clear();
         }
 		return read;
 	}
@@ -40,7 +41,7 @@ public class BasicInputQueue implements InputQueue {
 	// -- not needed by framework
 
 	public synchronized boolean isEmpty() {
-		return (buffer == null) || (buffer.position() == 0);
+		return (buffer == null) || (bytesRead == 0);
 	}
 
 	public synchronized int indexOf(byte b) {
@@ -106,10 +107,10 @@ public class BasicInputQueue implements InputQueue {
 
     @Override
     public Message getMessage() {
-        return this.validator.getMessage();
+        Message message = validator.getMessage();
+        if (message != null) {
+            bytesRead = 0;
+        }
+        return message;
     }
-
-    protected ByteBuffer getCurrentMessage() {
-		return this.buffer;
-	}
 }

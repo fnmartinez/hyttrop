@@ -61,6 +61,9 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             }
             this.enableReadSelection();
             // TODO cambiar para que cuando se llame, ejecute la acción corerspondiente. Switch?
+        } catch (Exception e) {
+            // TODO Log as Error
+            e.printStackTrace();
         } finally {
             synchronized (stateChangeLock) {
                 this.running = false;

@@ -40,20 +40,24 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 boolean messageFound = false;
                 int i;
                 for (i = 0; i < message.length && !messageFound; i++) {
-                    if (message[i] == (byte)'\n' && message[i+1] == (byte)'\r' && message[i+2] == (byte)'\n' && message[i+3] == (byte)'\r') {
+                    if (message[i] == (byte)'\r' && message[i+1] == (byte)'\n' && message[i+2] == (byte)'\r' && message[i+3] == (byte)'\n') {
                         messageFound = true;
                     }
                 }
                 if (messageFound) {
-                    String[] headers = new String(message).split("\n\r");
+                    String[] headers = new String(Arrays.copyOfRange(message, 0, i)).split("\r\n");
 
                     this.httpMessage = HttpMessage.newMessage(headers[0]);
 
-                    for(String header : headers) {
-                        String[] headerValue = header.split(":");
+                    for(int j = 1; j < headers.length; j++) {
+                        String[] headerValue = headers[j].split(":");
                         httpMessage.setHeader(headerValue[0].trim(), headerValue[1].trim());
                     }
-                    httpMessage.appendToBody(Arrays.copyOfRange(message, i, message.length - 1));
+
+                    // We check that the message next three bytes aren't the last ones.
+                    if ( i + 3 <= message.length -1) {
+                        httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length - 1));
+                    }
                     message = new byte[0];
                 }
             } else {
