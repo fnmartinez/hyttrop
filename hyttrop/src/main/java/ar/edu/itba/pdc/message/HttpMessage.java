@@ -40,7 +40,7 @@ public abstract class HttpMessage implements Message {
         } else if (firstLineArray.length == 3) {
             HttpRequestMessage requestMessage;
             HttpMethod method = HttpMethod.getMethod(firstLineArray[0].trim());
-            String protocol = firstLineArray[3].trim();
+            String protocol = firstLineArray[2].trim();
             if (method.equals(HttpMethod.UNKNOWN)) {
                 requestMessage = new HttpRequestMessage(method, new URI("*"), protocol, firstLine);
             } else {

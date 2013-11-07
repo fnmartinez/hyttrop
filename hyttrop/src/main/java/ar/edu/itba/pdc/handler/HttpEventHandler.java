@@ -16,6 +16,7 @@ import java.nio.channels.SocketChannel;
 public class HttpEventHandler implements EventHandler {
 
     private static final int DEFAULT_HTTP_PORT = 80;
+    private static final String CRLF = "\r\n";
     private final Dispatcher dispatcher;
     private HttpRequestMessage httpRequestMessage;
     private HttpResponseMessage httpResponseMessage;
@@ -28,23 +29,29 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void handleRead(ChannelFacade channelFacade, Message message) {
+        System.out.println("Handling Read from Client");
         if (httpRequestMessage == null) {
+            System.out.println("We have a message from the client!");
             httpRequestMessage = (HttpRequestMessage) message;
 
             SocketChannel channel;
             try {
                 String host = httpRequestMessage.getHeader("Host").getValue();
-                channel = SocketChannel.open(InetSocketAddress.createUnresolved(host, DEFAULT_HTTP_PORT));
+                channel = SocketChannel.open(new InetSocketAddress(host, DEFAULT_HTTP_PORT));
+                System.out.println("We have a connection to the server!");
                 dispatcher.registerChannel(channel, new EventHandler() {
                     private boolean sendBody = false;
                     @Override
                     public void handleRead(ChannelFacade channelFacade, Message message) {
+                        System.out.println("Handling Read from Server");
                         if (sendBody) {
+                            System.out.println("Receiving Body!");
                             int bytesToRead = 0;
                             try {
-                                if ((bytesToRead = httpResponseMessage.getBody().available())>0) {
+                                while ((bytesToRead = httpRequestMessage.getBody().available()) > 0) {
                                     byte[] bytes = new byte[bytesToRead];
                                     int bytesRead = httpResponseMessage.getBody().read(bytes);
+                                    System.out.println("Read " + bytesRead + " from server. Sending to client!");
                                     clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
                                     if (httpResponseMessage.isFinilized()) {
                                         httpResponseMessage = null;
@@ -54,29 +61,33 @@ public class HttpEventHandler implements EventHandler {
                                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                             }
                         } else {
+                            System.out.println("Receiving Headers!");
                             httpResponseMessage = (HttpResponseMessage) message;
-                            clientSideFacade = channelFacade;
-                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(httpRequestMessage.getRequestLine().getBytes()));
-                            for(HttpHeader header : httpRequestMessage.getHeaders()) {
-                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(header.toString().getBytes()));
+                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((httpResponseMessage.getStatusLine() + CRLF).getBytes()));
+                            System.out.println("Writing Headers Back to Client!");
+                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
+                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((header.toString() + CRLF).getBytes()));
                             }
-                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(new byte[]{'\n', '\r', '\n', '\r'}));
+                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(CRLF.getBytes()));
+                            sendBody = true;
                         }
                     }
 
                     @Override
                     public void handleWrite(ChannelFacade channelFacade) {
+                        System.out.println("Handling Write to Server");
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
 
                     @Override
                     public void handleConnection(ChannelFacade channelFacade) {
+                        System.out.println("Handling Connection from Server");
                         serverSideFacade = channelFacade;
-                        serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(httpRequestMessage.getRequestLine().getBytes()));
+                        serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap((httpRequestMessage.getRequestLine() + CRLF).getBytes()));
                         for(HttpHeader header : httpRequestMessage.getHeaders()) {
-                            serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(header.toString().getBytes()));
+                            serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap((header.toString() + CRLF).getBytes()));
                         }
-                        serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(new byte[]{'\n', '\r', '\n', '\r'}));
+                        serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(CRLF.getBytes()));
                     }
 
                     @Override
@@ -112,11 +123,13 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void handleWrite(ChannelFacade channelFacade) {
+        System.out.println("Handling Write to Client");
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void handleConnection(ChannelFacade channelFacade) {
+        System.out.println("Handling Connection from Client");
         clientSideFacade = channelFacade;
     }
 
