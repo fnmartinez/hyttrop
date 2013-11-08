@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.message;
 
+import ar.edu.itba.pdc.utils.L33tConversion;
 import ar.thorium.utils.Message;
 
 import java.io.IOException;
@@ -76,7 +77,14 @@ public abstract class HttpMessage implements Message {
 
     public void appendToBody(byte[] bytes) throws IOException {
     	addSize(bytes.length);
-        this.privateBody.write(bytes);
+    	if(headers.containsKey("Content-Type")){
+    		if(headers.get("Content-Type").getValue().compareTo("text/plain") == 0){
+    			 this.privateBody.write(L33tConversion.convert(bytes));
+    			 return;
+    		}
+    	}
+    	 this.privateBody.write(bytes);
+       
     }
 
 	public void setHeader(final String field, final String content){

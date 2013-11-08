@@ -63,12 +63,7 @@ public class HttpEventHandler implements EventHandler {
                                 byte[] bytes = new byte[bytesToRead];
                                 int bytesRead = httpResponseMessage.getBody().read(bytes);
                                 System.out.println("Read " + bytesRead + " from server. Sending to client!");
-                                if (httpResponseMessage.isFinilized() ) {
-                                	System.out.println("finished");
-                                	clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes), true);
-                                }else{
-                                	clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
-                                }
+                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
                             }
                         } catch (IOException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -142,6 +137,7 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void stopping(ChannelFacade channelFacade) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+		// To change body of implemented methods use File | Settings | File
+		// Templates.
+	}
 }

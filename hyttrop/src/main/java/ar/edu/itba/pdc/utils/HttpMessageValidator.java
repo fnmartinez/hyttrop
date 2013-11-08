@@ -78,6 +78,10 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     }
 
     private boolean messageFinilized(HttpMessage httpMessage) {
+    	if(httpMessage == null){
+    		System.out.println("FALSE");
+    		return false;
+    	}
     	if(httpMessage.containsHeader("Content-Length")){
     		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
     		System.out.println("Content: " + length + " message: "+ httpMessage.getSize());
@@ -85,9 +89,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     			System.out.println("message finalized");
     			return true;
     		}
-    	}else{
-    		System.out.println("NO CONTENT LENGTH");
     	}
-    	return false;
+    	return true;
     }
 }
