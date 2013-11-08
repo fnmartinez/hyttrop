@@ -1,6 +1,5 @@
 package ar.nadaChat;
 
-import ar.thorium.handler.EventHandler;
 import ar.thorium.handler.EventHandlerFactory;
 import ar.thorium.utils.ChannelFacade;
 

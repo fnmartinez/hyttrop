@@ -1,7 +1,5 @@
 package ar.edu.itba.pdc.message;
 
-import com.sun.xml.internal.ws.util.ASCIIUtility;
-
 import java.io.IOException;
 
 public class HttpResponseMessage extends HttpMessage {

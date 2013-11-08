@@ -1,14 +1,10 @@
 package ar.nadaChat;
 
 import ar.thorium.handler.EventHandler;
-import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.ChannelFacade;
 import ar.thorium.utils.Message;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class NadaHandler implements EventHandler {
 

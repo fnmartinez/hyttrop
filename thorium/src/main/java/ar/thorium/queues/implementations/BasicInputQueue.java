@@ -1,7 +1,6 @@
 package ar.thorium.queues.implementations;
 
 import ar.thorium.queues.InputQueue;
-import ar.thorium.queues.MessageValidator;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.Message;
