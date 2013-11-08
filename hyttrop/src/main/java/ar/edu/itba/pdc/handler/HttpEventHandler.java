@@ -63,9 +63,11 @@ public class HttpEventHandler implements EventHandler {
                                 byte[] bytes = new byte[bytesToRead];
                                 int bytesRead = httpResponseMessage.getBody().read(bytes);
                                 System.out.println("Read " + bytesRead + " from server. Sending to client!");
-                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
-                                if (httpResponseMessage.isFinilized()) {
-                                    httpResponseMessage = null;
+                                if (httpResponseMessage.isFinilized() ) {
+                                	System.out.println("finished");
+                                	clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes), true);
+                                }else{
+                                	clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
                                 }
                             }
                         } catch (IOException e) {

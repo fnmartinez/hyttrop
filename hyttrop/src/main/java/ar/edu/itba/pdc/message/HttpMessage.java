@@ -18,6 +18,7 @@ public abstract class HttpMessage implements Message {
     protected Map<String, HttpHeader> headers;
 	protected PipedInputStream exposedBody;
     protected PipedOutputStream privateBody;
+    private Integer totalBodySize;
 
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
@@ -58,6 +59,7 @@ public abstract class HttpMessage implements Message {
         this.privateBody = new PipedOutputStream();
         this.exposedBody = new PipedInputStream(this.privateBody);
         this.finilized = false;
+        this.totalBodySize = 0;
 	}
 	
 	public Collection<HttpHeader> getHeaders(){
@@ -73,6 +75,7 @@ public abstract class HttpMessage implements Message {
     }
 
     public void appendToBody(byte[] bytes) throws IOException {
+    	addSize(bytes.length);
         this.privateBody.write(bytes);
     }
 
@@ -80,11 +83,23 @@ public abstract class HttpMessage implements Message {
 		headers.put(field, new HttpHeader(field, content));
 	}
 
+	private synchronized void addSize(int size){
+		totalBodySize += size;
+	}
+	
+	public synchronized Integer getSize(){
+		return this.totalBodySize;
+	}
+	
     public boolean isFinilized() {
         return finilized;
     }
 
     public void finilize() {
         this.finilized = true;
+    }
+    
+    public boolean containsHeader(String header){
+    	return headers.containsKey(header);
     }
 }

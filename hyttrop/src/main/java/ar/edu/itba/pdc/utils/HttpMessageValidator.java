@@ -56,7 +56,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
 
                     // We check that the message next three bytes aren't the last ones.
                     if ( i + 3 <= message.length -1) {
-                        httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length - 1));
+                    	//message.length -1
+                        httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));
                     }
                     message = new byte[0];
                 }
@@ -64,9 +65,9 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 httpMessage.appendToBody(message);
                 System.out.println("All bytes appended to Message");
                 message = new byte[0];
-                if (messageFinilized(httpMessage)) {
-                    httpMessage.finilize();
-                }
+            }
+            if (messageFinilized(httpMessage)) {
+                httpMessage.finilize();
             }
             return httpMessage;
         }catch (URISyntaxException e1){
@@ -77,6 +78,16 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     }
 
     private boolean messageFinilized(HttpMessage httpMessage) {
-        return false;  //To change body of created methods use File | Settings | File Templates.
+    	if(httpMessage.containsHeader("Content-Length")){
+    		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
+    		System.out.println("Content: " + length + " message: "+ httpMessage.getSize());
+    		if(httpMessage.getSize().compareTo(length) == 0){
+    			System.out.println("message finalized");
+    			return true;
+    		}
+    	}else{
+    		System.out.println("NO CONTENT LENGTH");
+    	}
+    	return false;
     }
 }

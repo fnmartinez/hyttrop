@@ -60,7 +60,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 }
             }
             this.enableReadSelection();
-            // TODO cambiar para que cuando se llame, ejecute la acción corerspondiente. Switch?
+            // TODO cambiar para que cuando se llame, ejecute la acci��n corerspondiente. Switch?
         } catch (Exception e) {
             // TODO Log as Error
             e.printStackTrace();
@@ -98,6 +98,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     // If there is output queued, and the channel is ready to
     // accept data, send as much as it will take.
     private void drainOutput() throws IOException {
+    	
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
             System.out.println("Descargo la cola!");
@@ -107,10 +108,10 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         // Write selection is turned on when output data in enqueued,
         // turn it off when the queue becomes empty.
         if (outputQueue.isEmpty()) {
-            System.out.println("Tengo la cola vacía!");
+            System.out.println("Tengo la cola vac��a!");
             disableWriteSelection();
 
-            if (shuttingDown) {
+            if (shuttingDown || outputQueue.getClose()) {
                 System.out.println("Cierro el canal!");
                 channel.close();
                 eventHandler.stopped(this);
@@ -126,7 +127,6 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             return;
 
         int rc = inputQueue.fillFrom((ByteChannel) channel);
-
         if (rc == -1) {
             disableReadSelection();
 
@@ -142,6 +142,8 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 }
             }
 
+            System.out.println("End of Stream reached");
+            
             shuttingDown = true;
             eventHandler.stopping(this);
 

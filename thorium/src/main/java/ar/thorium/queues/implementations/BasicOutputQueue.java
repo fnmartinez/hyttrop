@@ -15,6 +15,7 @@ public class BasicOutputQueue implements OutputQueue {
 	private final Deque<ByteBuffer> queue;
 	private ChannelFacade facade;
 	private ByteBuffer active = null;
+	private boolean close = false;
 
 	public BasicOutputQueue(BufferFactory bufferFactory) {
 		this.bufferFactory = bufferFactory;
@@ -24,7 +25,7 @@ public class BasicOutputQueue implements OutputQueue {
 	public synchronized boolean isEmpty() {
 		return (active == null) && (queue.size() == 0);
 	}
-
+	
 	public synchronized int drainTo(ByteChannel channel) throws IOException {
 		int bytesWritten = 0;
 
@@ -54,6 +55,11 @@ public class BasicOutputQueue implements OutputQueue {
 
 	// -- not needed by framework
 
+	public synchronized boolean enqueue(ByteBuffer byteBuffer, boolean close) {
+		this.close = close;
+		return enqueue(byteBuffer);
+	}
+	
 	public synchronized boolean enqueue(ByteBuffer byteBuffer) {
 		if (byteBuffer.remaining() == 0) {
 			return false;
@@ -93,6 +99,10 @@ public class BasicOutputQueue implements OutputQueue {
 		}
 	}
 
+	public synchronized boolean getClose(){
+		return this.close;
+	}
+	
 	@Override
 	public void setChannelFacade(ChannelFacade channelFacade) {
 		this.facade = channelFacade;
