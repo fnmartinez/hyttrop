@@ -100,15 +100,18 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     private void drainOutput() throws IOException {
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
+            System.out.println("Descargo la cola!");
             outputQueue.drainTo((ByteChannel) channel);
         }
 
         // Write selection is turned on when output data in enqueued,
         // turn it off when the queue becomes empty.
         if (outputQueue.isEmpty()) {
+            System.out.println("Tengo la cola vacía!");
             disableWriteSelection();
 
             if (shuttingDown) {
+                System.out.println("Cierro el canal!");
                 channel.close();
                 eventHandler.stopped(this);
             }

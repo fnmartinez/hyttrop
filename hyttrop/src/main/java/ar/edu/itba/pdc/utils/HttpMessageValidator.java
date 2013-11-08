@@ -62,6 +62,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 }
             } else {
                 httpMessage.appendToBody(message);
+                System.out.println("All bytes appended to Message");
                 message = new byte[0];
                 if (messageFinilized(httpMessage)) {
                     httpMessage.finilize();
