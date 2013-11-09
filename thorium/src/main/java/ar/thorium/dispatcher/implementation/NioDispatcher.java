@@ -22,7 +22,6 @@ import java.util.concurrent.Executor;
 
 public class NioDispatcher implements Dispatcher, Runnable {
 
-    private final Logger logger = Logger.getLogger(getClass().getName());
     private final Selector selector;
     private final BlockingQueue<Pair<HandlerAdapter, SelectionKey>> statusChangeQueue;
     private final SelectorGuard guard;
@@ -30,7 +29,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
     private final InputQueueFactory inputQueueFactory;
     private final OutputQueueFactory outputQueueFactory;
     private volatile boolean dispatching = true;
-
+    private static Logger logger = Logger.getLogger(NioDispatcher.class);
 
     public NioDispatcher(Executor executor, SelectorGuard guard, InputQueueFactory inputQueueFactory, OutputQueueFactory outputQueueFactory) throws IOException {
         this.inputQueueFactory = inputQueueFactory;
@@ -55,19 +54,20 @@ public class NioDispatcher implements Dispatcher, Runnable {
             Set<SelectionKey> keys = selector.selectedKeys();
 
             for (SelectionKey key : keys) {
+                logger.debug("Dispatching connection.");
                 HandlerAdapter adapter = (HandlerAdapter) key.attachment();
-
                 invokeHandler(adapter, key);
+                logger.debug("Connection dispatched.");
             }
 
             keys.clear();
-        }    }
-
+        }
+    }
 
     @Override
     public void shutdown() {
+        logger.debug("Dispatcher shutting down.");
         dispatching = false;
-
         selector.wakeup();
     }
 
@@ -77,20 +77,28 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
         HandlerAdapter adapter;
         try {
+            logger.debug("Creating new adapter.");
             adapter = new HandlerAdapter(this, inputQueueFactory.newInputQueue(), outputQueueFactory.newOutputQueue(), handler);
+            logger.debug("Adapter created.");
         } catch (QueueBuildingException e) {
+            logger.error("Adapter could not be created.", e);
             throw new IOException(e);
         }
-
+        logger.debug("Acquiring selector.");
         acquireSelector();
+        logger.debug("Selector acquired.");
 
         try {
+            logger.debug("Registering channel.");
             SelectionKey key = channel.register(getSelector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE,
                     adapter);
-
             adapter.setKey(key);
-
+            logger.debug("Channel registered.");
             return adapter;
+        }catch(Exception e){
+            logger.error("Channel could not be registered.", e);
+            e.printStackTrace();
+            return null;
         } finally {
             releaseSelector();
         }
@@ -99,7 +107,8 @@ public class NioDispatcher implements Dispatcher, Runnable {
     @Override
     public void unregisterChannel(ChannelFacade key) {
         if (!(key instanceof HandlerAdapter)) {
-            throw new IllegalArgumentException("Not a valid registration token");
+            logger.error("The specified key is incorrect.");
+            throw new IllegalArgumentException("Not a valid registration token.");
         }
 
         @SuppressWarnings("unchecked")
@@ -111,6 +120,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             adapter.unregistering();
             selectionKey.cancel();
+            logger.debug("Channel unregistered.");
         } finally {
             releaseSelector();
         }
@@ -132,11 +142,13 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             while (true) {
                 try {
+                    logger.debug("Enqueing status change.");
                     statusChangeQueue.put(pair);
                     selector.wakeup();
                     return;
                 } catch (InterruptedException e) {
                     interrupted = true;
+                    logger.fatal("Status change operation throwed an error.", e);
                 }
             }
         } finally {
@@ -150,14 +162,14 @@ public class NioDispatcher implements Dispatcher, Runnable {
         Thread thread = new Thread(this);
 
         thread.start();
-
+        logger.debug("Dispatcher started.");
         return thread;
     }
 
     private void invokeHandler(HandlerAdapter adapter, SelectionKey key) {
         adapter.prepareToRun(key);
         adapter.key().interestOps(0);
-
+        logger.debug("Invoking handler.");
         executor.execute(new HandlerFutureTask(adapter, this, key));
     }
 
@@ -181,7 +193,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             dispatch();
         } catch (IOException e) {
-            logger.error("Unexpected I/O Exception", e);
+            logger.fatal("Unexpected I/O Exception", e);
         }
 
         Set<SelectionKey> keys = selector.selectedKeys();

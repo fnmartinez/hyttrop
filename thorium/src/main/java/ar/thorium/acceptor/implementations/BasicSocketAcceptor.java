@@ -25,7 +25,7 @@ public class BasicSocketAcceptor implements Acceptor {
 	private final ServerSocketChannel listenSocket;
 	private final Listener listener;
 	private final List<Thread> threads = new ArrayList<Thread>();
-	private Logger logger = Logger.getLogger(getClass().getName());
+	private static Logger logger = Logger.getLogger(BasicSocketAcceptor.class);
 	private volatile boolean running = true;
 
 	public BasicSocketAcceptor(int port,
@@ -52,12 +52,15 @@ public class BasicSocketAcceptor implements Acceptor {
 		thread = dispatcher.start();
 		threads.add(thread);
 
+        logger.debug("New thread created.");
 		return thread;
 	}
 
 	@Override
 	public synchronized void shutdown() {
-		running = false;
+
+        logger.debug("Shutting down.");
+        running = false;
 
         for(Thread t : this.threads) {
             if (t.isAlive()) {
@@ -67,9 +70,10 @@ public class BasicSocketAcceptor implements Acceptor {
 
         for(Thread t : this.threads) {
             try {
+                logger.debug("Trying to join thread.");
                 t.join();
             } catch (InterruptedException e) {
-                // TODO: Log!
+                logger.error("An error occurred.", e);
             }
         }
 

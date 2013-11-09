@@ -2,6 +2,7 @@ package ar.edu.itba.pdc.message;
 
 import ar.edu.itba.pdc.utils.L33tConversion;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +22,15 @@ public abstract class HttpMessage implements Message {
     protected PipedOutputStream privateBody;
     private Integer totalBodySize;
     private boolean specialGziped;
+    private static Logger logger = Logger.getLogger(HttpMessage.class);
 
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
+        logger.info("Receiving a new Http message.");
         String[] firstLineArray = firstLine.split(" ");
 
         if (firstLine.startsWith("HTTP")) {
+            logger.info("The new message is a response.");
             HttpResponseMessage responseMessage;
             String protocol = firstLineArray[0];
             HttpStatusCode statusCode = HttpStatusCode.getStatusCode(Integer.parseInt(firstLineArray[1]));
@@ -41,6 +45,7 @@ public abstract class HttpMessage implements Message {
             }
             return responseMessage;
         } else if (firstLineArray.length == 3) {
+            logger.info("The new message is a request.");
             HttpRequestMessage requestMessage;
             HttpMethod method = HttpMethod.getMethod(firstLineArray[0].trim());
             String protocol = firstLineArray[2].trim();

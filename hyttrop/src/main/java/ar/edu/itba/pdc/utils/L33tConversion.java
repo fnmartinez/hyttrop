@@ -1,8 +1,13 @@
 package ar.edu.itba.pdc.utils;
 
+import org.apache.log4j.Logger;
+
 public class L33tConversion {
 
+    private static Logger logger = Logger.getLogger(L33tConversion.class);
+
 	public static byte[] convert(byte[] bytes){
+        logger.info("Applying l33t conversion.");
 		for(int i = 0; i< bytes.length; i++){
 			switch(bytes[i]){
 			case 'a': bytes[i] = '4'; break;

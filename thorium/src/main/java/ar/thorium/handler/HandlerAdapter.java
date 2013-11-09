@@ -5,6 +5,7 @@ import ar.thorium.queues.InputQueue;
 import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.ChannelFacade;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -29,6 +30,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     private int interestOps = 0;
     private int readyOps = 0;
     private boolean connectionHandled;
+    private static Logger logger = Logger.getLogger(HandlerAdapter.class);
 
     public HandlerAdapter(Dispatcher dispatcher, InputQueue inputQueue,
                           OutputQueue outputQueue, EventHandler eventHandler) {
@@ -46,23 +48,25 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             if (!connectionHandled || (readyOps & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) {
                 eventHandler.handleConnection(this);
                 connectionHandled = true;
+                logger.debug("Handler caller to connect.");
             }
             if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
                 eventHandler.handleWrite(this);
                 drainOutput();
-
+                logger.debug("Handler caller to write.");
             }
             if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
                 fillInput();
                 Message message;
                 if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
                     eventHandler.handleRead(this, message);
+                    logger.debug("Handler caller to read.");
                 }
             }
             this.enableReadSelection();
             // TODO cambiar para que cuando se llame, ejecute la acci��n corerspondiente. Switch?
         } catch (Exception e) {
-            // TODO Log as Error
+            logger.error("An error occurred while calling this handler.", e);
             e.printStackTrace();
         } finally {
             synchronized (stateChangeLock) {
@@ -101,18 +105,18 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     	
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
-            System.out.println("Descargo la cola!");
+            logger.debug("Queue drained.");
             outputQueue.drainTo((ByteChannel) channel);
         }
 
         // Write selection is turned on when output data in enqueued,
         // turn it off when the queue becomes empty.
         if (outputQueue.isEmpty()) {
-            System.out.println("Tengo la cola vac��a!");
+            logger.debug("Queue is empty.");
             disableWriteSelection();
 
             if (shuttingDown || outputQueue.getClose()) {
-                System.out.println("Cierro el canal!");
+                logger.debug("Channel was closed.");
                 channel.close();
                 eventHandler.stopped(this);
             }
@@ -142,8 +146,8 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 }
             }
 
-            System.out.println("End of Stream reached");
-            
+            logger.debug("End of stream reached.");
+
             shuttingDown = true;
             eventHandler.stopping(this);
 
@@ -169,7 +173,9 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 interestOps = key.interestOps();
                 readyOps = key.readyOps();
                 running = true;
+                logger.debug("Handler prepared to run.");
             } else {
+                logger.error("Incorrect key received.");
                 throw new IllegalArgumentException("This is not my key");
             }
         }
@@ -233,11 +239,13 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     }
 
     public void die() {
+        logger.debug("Handler died.");
         this.dead = true;
     }
 
     protected int modifyInterestOps(int ops, int opsToSet, int opsToReset) {
         ops = (ops | opsToSet) & (~opsToReset);
+        logger.debug("InterestOpts modified.");
         return ops;
     }
 
