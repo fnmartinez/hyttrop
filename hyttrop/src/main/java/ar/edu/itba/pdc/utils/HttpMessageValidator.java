@@ -28,13 +28,15 @@ public class HttpMessageValidator implements SimpleMessageValidator {
         if (httpMessage == null) {
             int newSize = incomming.length + message.length;
             byte[] newMessage = new byte[newSize];
-            for (int i = 0; i < message.length; i++) {
+            int i, j;
+            for (i = 0; i < message.length; i++) {
                 newMessage[i] = message[i];
             }
-            for (int i = 0; i < newMessage.length; i++) {
-                newMessage[message.length + i] = incomming[i];
+            for (j = 0; j < incomming.length && incomming[j] != 0; j++) {
+                if (incomming[j] == 0) break;
+                newMessage[i + j] = incomming[j];
             }
-            message = newMessage;
+            message = Arrays.copyOfRange(newMessage, 0, i + j);
         } else {
             message = Arrays.copyOf(incomming, incomming.length);
         }
@@ -69,7 +71,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 	}
 
                     // We check that the message next three bytes aren't the last ones.
-                    if ( i + 3 <= message.length -1) {
+                    if ( i + 3 <= message.length -1 && message[i + 4] != 0) {
                     	//message.length -1
                         httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));
                     }

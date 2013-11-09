@@ -46,17 +46,18 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             if (!connectionHandled || (readyOps & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) {
                 eventHandler.handleConnection(this);
                 connectionHandled = true;
-            }
-            if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
-                eventHandler.handleWrite(this);
-                drainOutput();
-
-            }
-            if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
-                fillInput();
-                Message message;
-                if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
-                    eventHandler.handleRead(this, message);
+                this.enableWriteSelection();
+            } else {
+                if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
+                    eventHandler.handleWrite(this);
+                    drainOutput();
+                }
+                if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
+                    fillInput();
+                    Message message;
+                    if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
+                        eventHandler.handleRead(this, message);
+                    }
                 }
             }
             this.enableReadSelection();
@@ -108,7 +109,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         // Write selection is turned on when output data in enqueued,
         // turn it off when the queue becomes empty.
         if (outputQueue.isEmpty()) {
-            System.out.println("Tengo la cola vac��a!");
+            System.out.println("Tengo la cola vacía!");
             disableWriteSelection();
 
             if (shuttingDown || outputQueue.isClosed()) {
@@ -193,8 +194,9 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         }
     }
 
+
+
     public void enableWriting() {
-        // TODO Auto-generated method stub
         enableWriteSelection();
         issueChange(key);
     }
@@ -210,14 +212,6 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     public OutputQueue outputQueue() {
         return this.outputQueue;
-    }
-
-    public void setHandler(EventHandler handler) {
-        this.eventHandler = handler;
-    }
-
-    public EventHandler getHandler() {
-        return this.eventHandler;
     }
 
     public boolean isDead() {
@@ -250,4 +244,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         }
     }
 
+    public boolean connectionHandled() {
+        return connectionHandled;
+    }
 }

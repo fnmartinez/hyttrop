@@ -13,14 +13,12 @@ import java.util.LinkedList;
 
 public class BasicOutputQueue implements OutputQueue {
     private final float QUEUE_GROWTH_FACTOR = 1.1f;
-	private final BufferFactory bufferFactory;
 	private byte[] queue;
     private int size;
 	private ChannelFacade facade;
 	private boolean close = false;
 
 	public BasicOutputQueue(BufferFactory bufferFactory) {
-		this.bufferFactory = bufferFactory;
 		queue = new byte[0];
         size = 0;
 	}
@@ -30,19 +28,19 @@ public class BasicOutputQueue implements OutputQueue {
 	}
 	
 	public synchronized int drainTo(ByteChannel channel) throws IOException {
-		int bytesWritten = channel.write(ByteBuffer.wrap(queue).asReadOnlyBuffer());
+        ByteBuffer bf = ByteBuffer.wrap(queue);
+		int bytesWritten = channel.write(bf);
 
-        if (bytesWritten == 0) {
-            return bytesWritten;
+        if (bytesWritten > 0) {
+            resizeQueue(size - bytesWritten);
+            size = queue.length;
         }
-
-        resizeQueue(size - bytesWritten);
 
         return bytesWritten;
 	}
 
     private void resizeQueue(int newSize) {
-        if (newSize == 0) {
+        if (newSize <= 0) {
             queue = new byte[0];
         } else {
             byte[] newQueue = new byte[newSize];
@@ -50,6 +48,7 @@ public class BasicOutputQueue implements OutputQueue {
                 for (int i = 0; i < newQueue.length; i++) {
                     newQueue[i] = queue[size - newSize + i];
                 }
+                size = newSize;
             } else if (newSize > size) {
                 for (int i = 0; i < queue.length; i++) {
                     newQueue[i] = queue[i];
@@ -57,7 +56,6 @@ public class BasicOutputQueue implements OutputQueue {
             }
             queue = newQueue;
         }
-        size = newSize;
     }
 
 	public synchronized boolean enqueue(byte[] bytes) {
@@ -66,7 +64,7 @@ public class BasicOutputQueue implements OutputQueue {
         }
 
         if (bytes.length + size >= queue.length) {
-            resizeQueue((int)((bytes.length + queue.length) * 1.1f));
+            resizeQueue((int)((bytes.length + queue.length) * QUEUE_GROWTH_FACTOR));
         }
         for (int i = 0; i < bytes.length; i++) {
             queue[size + i] = bytes[i];
