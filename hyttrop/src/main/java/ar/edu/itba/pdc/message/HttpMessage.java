@@ -3,6 +3,7 @@ package ar.edu.itba.pdc.message;
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
 import ar.edu.itba.pdc.utils.L33tConversion;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,44 +32,44 @@ public abstract class HttpMessage implements Message {
 	// protected OutputStream privateBody;
 	private Integer totalBodySize;
 	private boolean specialGziped;
+	private static Logger logger = Logger.getLogger(HttpMessage.class);
 
-	public static HttpMessage newMessage(String firstLine)
-			throws URISyntaxException, IOException {
+    public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
-		String[] firstLineArray = firstLine.split(" ");
+        logger.info("Receiving a new Http message.");
+        String[] firstLineArray = firstLine.split(" ");
 
-		if (firstLine.startsWith("HTTP")) {
-			HttpResponseMessage responseMessage;
-			String protocol = firstLineArray[0];
-			HttpStatusCode statusCode = HttpStatusCode.getStatusCode(Integer
-					.parseInt(firstLineArray[1]));
-			if (statusCode.equals(HttpStatusCode.SC_UNKNOWN)) {
-				StringBuilder sb = new StringBuilder();
-				for (int i = 2; i < firstLineArray.length; i++) {
-					sb.append(firstLineArray[i]);
-				}
-				responseMessage = new HttpResponseMessage(protocol, statusCode,
-						Integer.parseInt(firstLineArray[1]), sb.toString());
-			} else {
-				responseMessage = new HttpResponseMessage(protocol, statusCode);
-			}
-			return responseMessage;
-		} else if (firstLineArray.length == 3) {
-			HttpRequestMessage requestMessage;
-			HttpMethod method = HttpMethod.getMethod(firstLineArray[0].trim());
-			String protocol = firstLineArray[2].trim();
-			if (method.equals(HttpMethod.UNKNOWN)) {
-				requestMessage = new HttpRequestMessage(method, new URI("*"),
-						protocol, firstLine);
-			} else {
-				URI uri = new URI(firstLineArray[1].trim());
-				requestMessage = new HttpRequestMessage(method, uri, protocol);
-			}
-			return requestMessage;
-		} else {
-			return null;
-		}
-	}
+        if (firstLine.startsWith("HTTP")) {
+            logger.info("The new message is a response.");
+            HttpResponseMessage responseMessage;
+            String protocol = firstLineArray[0];
+            HttpStatusCode statusCode = HttpStatusCode.getStatusCode(Integer.parseInt(firstLineArray[1]));
+            if (statusCode.equals(HttpStatusCode.SC_UNKNOWN)) {
+                StringBuilder sb = new StringBuilder();
+                for(int i = 2; i < firstLineArray.length; i++) {
+                    sb.append(firstLineArray[i]);
+                }
+                responseMessage = new HttpResponseMessage(protocol, statusCode, Integer.parseInt(firstLineArray[1]), sb.toString());
+            } else {
+                responseMessage = new HttpResponseMessage(protocol, statusCode);
+            }
+            return responseMessage;
+        } else if (firstLineArray.length == 3) {
+            logger.info("The new message is a request.");
+            HttpRequestMessage requestMessage;
+            HttpMethod method = HttpMethod.getMethod(firstLineArray[0].trim());
+            String protocol = firstLineArray[2].trim();
+            if (method.equals(HttpMethod.UNKNOWN)) {
+                requestMessage = new HttpRequestMessage(method, new URI("*"), protocol, firstLine);
+            } else {
+                URI uri = new URI(firstLineArray[1].trim());
+                requestMessage = new HttpRequestMessage(method, uri, protocol);
+            }
+            return requestMessage;
+        } else {
+            return null;
+        }
+    }
 
 	public HttpMessage() throws IOException {
 		this.headers = new HashMap<>();

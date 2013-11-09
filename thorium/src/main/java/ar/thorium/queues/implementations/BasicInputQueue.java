@@ -4,6 +4,7 @@ import ar.thorium.queues.InputQueue;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -15,9 +16,9 @@ public class BasicInputQueue implements InputQueue {
 	private ByteBuffer buffer = null;
     private int bytesRead = 0;
     private SimpleMessageValidator validator;
+    private static Logger logger = Logger.getLogger(BasicInputQueue.class);
 
-
-	public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
+    public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
 		this.bufferFactory = bufferFactory;
 		emptyBuffer = ByteBuffer.allocate(0).asReadOnlyBuffer();
         this.validator = validator;
@@ -26,6 +27,7 @@ public class BasicInputQueue implements InputQueue {
 	public synchronized int fillFrom(ByteChannel channel) throws IOException {
 		if (buffer == null) {
 			buffer = bufferFactory.newBuffer();
+            logger.debug("New buffer created.");
 		}
         int read = channel.read(buffer);
         if (read > 0) {
@@ -33,6 +35,7 @@ public class BasicInputQueue implements InputQueue {
             buffer.flip();
             validator.putInput(buffer.asReadOnlyBuffer());
             buffer.clear();
+            logger.debug("Buffer was filled from the channel.");
         }
 		return read;
 	}
@@ -65,6 +68,7 @@ public class BasicInputQueue implements InputQueue {
 
 	public synchronized ByteBuffer dequeueBytes(int count) {
 		if ((buffer == null) || (buffer.position() == 0) || (count == 0)) {
+            logger.debug("Buffer is empty while trying to deque bytes.");
 			return emptyBuffer;
 		}
 
@@ -97,11 +101,14 @@ public class BasicInputQueue implements InputQueue {
 
 		result.flip();
 
+        logger.debug("Bytes dequeued from buffer.");
 		return (result);
 	}
 
 	public void discardBytes(int count) {
+
 		dequeueBytes(count);
+        logger.debug(count + " bytes discarded from buffer.");
 	}
 
     @Override
@@ -110,6 +117,7 @@ public class BasicInputQueue implements InputQueue {
         if (message != null) {
             bytesRead = 0;
         }
+        logger.debug("Message returned from input queue.");
         return message;
     }
 }
