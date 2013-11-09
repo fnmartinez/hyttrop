@@ -20,6 +20,7 @@ public abstract class HttpMessage implements Message {
 	protected PipedInputStream exposedBody;
     protected PipedOutputStream privateBody;
     private Integer totalBodySize;
+    private boolean specialGziped;
 
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
@@ -60,6 +61,7 @@ public abstract class HttpMessage implements Message {
         this.privateBody = new PipedOutputStream();
         this.exposedBody = new PipedInputStream(this.privateBody);
         this.finilized = false;
+        this.specialGziped = false;
         this.totalBodySize = 0;
 	}
 	
@@ -105,6 +107,16 @@ public abstract class HttpMessage implements Message {
 
     public void finilize() {
         this.finilized = true;
+    }
+    
+    public void setSpecialGziped(boolean value){
+    	this.specialGziped = value;
+    }
+    
+    
+    
+    public boolean getSpecialGziped(){
+    	return this.specialGziped;
     }
     
     public boolean containsHeader(String header){

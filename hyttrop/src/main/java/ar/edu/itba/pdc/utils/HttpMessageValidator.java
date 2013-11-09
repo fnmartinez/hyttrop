@@ -53,6 +53,13 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                         String[] headerValue = headers[j].split(":");
                         httpMessage.setHeader(headerValue[0].trim(), headerValue[1].trim());
                     }
+                    
+                    if(httpMessage.containsHeader("Content-Encoding") && 
+                			httpMessage.containsHeader("Content-Type") &&
+                			httpMessage.getHeader("Content-Encoding").getValue().compareTo("gzip") == 0 &&
+                			httpMessage.getHeader("Content-Type").getValue().compareTo("text/plain") == 0){
+                		httpMessage.setSpecialGziped(true);
+                	}
 
                     // We check that the message next three bytes aren't the last ones.
                     if ( i + 3 <= message.length -1) {
@@ -88,6 +95,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     		if(httpMessage.getSize().compareTo(length) == 0){
     			System.out.println("message finalized");
     			return true;
+    		}else{
+    			return false;
     		}
     	}
     	return true;
