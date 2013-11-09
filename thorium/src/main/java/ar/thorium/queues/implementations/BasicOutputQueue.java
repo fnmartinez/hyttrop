@@ -3,13 +3,10 @@ package ar.thorium.queues.implementations;
 import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.ChannelFacade;
-import com.sun.deploy.util.ArrayUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.util.Deque;
-import java.util.LinkedList;
 
 public class BasicOutputQueue implements OutputQueue {
     private final float QUEUE_GROWTH_FACTOR = 1.1f;
@@ -18,7 +15,7 @@ public class BasicOutputQueue implements OutputQueue {
 	private ChannelFacade facade;
 	private boolean close = false;
 
-	public BasicOutputQueue(BufferFactory bufferFactory) {
+	public BasicOutputQueue() {
 		queue = new byte[0];
         size = 0;
 	}
@@ -34,6 +31,8 @@ public class BasicOutputQueue implements OutputQueue {
         if (bytesWritten > 0) {
             resizeQueue(size - bytesWritten);
             size = queue.length;
+        } else if (bytesWritten == -1) {
+            close = true;
         }
 
         return bytesWritten;
@@ -80,11 +79,11 @@ public class BasicOutputQueue implements OutputQueue {
 	}
 
 	public synchronized boolean isClosed(){
-		return this.close;
+		return close;
 	}
 	
 	@Override
-	public void setChannelFacade(ChannelFacade channelFacade) {
-		this.facade = channelFacade;
+	public void setChannelFacade(ChannelFacade facede) {
+		this.facade = facede;
 	}
 }

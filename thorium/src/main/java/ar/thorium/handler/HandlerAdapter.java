@@ -102,7 +102,6 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     // If there is output queued, and the channel is ready to
     // accept data, send as much as it will take.
     private void drainOutput() throws IOException {
-    	
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
             logger.debug("Queue drained.");
@@ -131,7 +130,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             return;
 
         int rc = inputQueue.fillFrom((ByteChannel) channel);
-        if (rc == -1) {
+        if (inputQueue.isClosed()) {
             disableReadSelection();
 
             if (channel instanceof SocketChannel) {

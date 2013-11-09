@@ -25,7 +25,7 @@ public class Hyttrop {
         EventHandlerFactory<HttpEventHandler> factory = new HttpEventHandlerFactory();
         InputQueueFactory inputQueueFactory = InputQueueFactory.newInstance(new HttpMessageValidator(), new SimpleBufferFactory(1024));
         NioDispatcher dispatcher = new NioDispatcher (executor, guard,  inputQueueFactory, outputQueueFactory);//executor, guard, input y output
-        BasicSocketAcceptor acceptor = new BasicSocketAcceptor (1234, factory, dispatcher);
+        BasicSocketAcceptor acceptor = new BasicSocketAcceptor (8080, factory, dispatcher);
         ((HttpEventHandlerFactory)factory).setDispatcher(dispatcher);
 
         acceptor.newThread();
