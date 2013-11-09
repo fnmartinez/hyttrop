@@ -15,11 +15,13 @@ public class BasicInputQueue implements InputQueue {
     private int bytesRead;
     private SimpleMessageValidator validator;
     private static Logger logger = Logger.getLogger(BasicInputQueue.class);
+    private boolean closed;
 
     public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
 		this.bufferFactory = bufferFactory;
         this.bytesRead = 0;
         this.validator = validator;
+        this.closed = false;
 	}
 
 	public synchronized int fillFrom(ByteChannel channel) throws IOException {
@@ -36,6 +38,9 @@ public class BasicInputQueue implements InputQueue {
                 validator.putInput(buffer.array());
             }
         } while (read > 0);
+        if (read == -1) {
+            closed = true;
+        }
         return fillRead;
 	}
 
@@ -46,7 +51,11 @@ public class BasicInputQueue implements InputQueue {
 	}
 
     public int size() {
-        return this.bytesRead;
+        return bytesRead;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
     @Override

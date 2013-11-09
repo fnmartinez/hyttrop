@@ -1,14 +1,9 @@
 package ar.thorium.queues;
 
-import ar.thorium.utils.BufferFactory;
-import ar.thorium.utils.SimpleBufferFactory;
-
 public abstract class OutputQueueFactory {
 
-	private static BufferFactory defaultBufferFactory = new SimpleBufferFactory(1024);
-	
 	public static OutputQueueFactory newInstance() {
-		return new BasicOutputFactory(defaultBufferFactory);
+		return new BasicOutputFactory();
 	}
 	
 	public abstract OutputQueue newOutputQueue();

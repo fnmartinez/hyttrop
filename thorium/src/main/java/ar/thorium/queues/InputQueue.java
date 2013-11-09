@@ -11,5 +11,6 @@ public interface InputQueue {
 	int fillFrom(ByteChannel channel) throws IOException;
 	boolean isEmpty();
     int size();
+    boolean isClosed();
     Message getMessage();
 }
