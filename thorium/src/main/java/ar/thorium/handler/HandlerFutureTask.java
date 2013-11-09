@@ -39,10 +39,10 @@ public class HandlerFutureTask extends FutureTask<HandlerAdapter> implements Run
 			// method is still running in the worker thread.
 		} catch (ExecutionException e) {
 			adapter.die();
-			logger.error("Handler died", e.getCause());
+			logger.error("Handler died.", e.getCause());
 		} catch (InterruptedException e) {
 			Thread.interrupted();
-			logger.error("Handler interrupted", e);
+			logger.error("Handler interrupted.", e);
 		}
 	}
 

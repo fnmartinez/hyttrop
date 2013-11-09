@@ -1,10 +1,13 @@
 package ar.edu.itba.pdc.message;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.net.URI;
 
 public class HttpRequestMessage extends HttpMessage {
 
+    private static Logger logger = Logger.getLogger(HttpRequestMessage.class);
     private HttpMethod method;
     private URI uri;
     private String protocol;
@@ -20,6 +23,7 @@ public class HttpRequestMessage extends HttpMessage {
         this.uri = uri;
         this.protocol = protocol;
         this.requestLine = requestLine;
+        logger.debug("Making a request to " + uri);
     }
 
     public HttpMethod getMethod() {

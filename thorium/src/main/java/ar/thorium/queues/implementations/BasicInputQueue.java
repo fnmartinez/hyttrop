@@ -4,6 +4,7 @@ import ar.thorium.queues.InputQueue;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,9 +14,9 @@ public class BasicInputQueue implements InputQueue {
 	private final BufferFactory bufferFactory;
     private int bytesRead;
     private SimpleMessageValidator validator;
+    private static Logger logger = Logger.getLogger(BasicInputQueue.class);
 
-
-	public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
+    public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
 		this.bufferFactory = bufferFactory;
         this.bytesRead = 0;
         this.validator = validator;
@@ -26,14 +27,16 @@ public class BasicInputQueue implements InputQueue {
         int read;
         do {
             ByteBuffer buffer = bufferFactory.newBuffer();
+            logger.debug("New buffer created.");
             read = channel.read(buffer);
+            logger.debug("Buffer was filled from the channel with " + read + ".");
             if (read > 0) {
                 fillRead += read;
                 bytesRead += read;
                 validator.putInput(buffer.array());
             }
         } while (read > 0);
-		return fillRead;
+        return fillRead;
 	}
 
 	// -- not needed by framework
@@ -52,6 +55,7 @@ public class BasicInputQueue implements InputQueue {
         if (message != null) {
             bytesRead = 0;
         }
+        logger.debug("Message returned from input queue.");
         return message;
     }
 }

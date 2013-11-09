@@ -7,6 +7,7 @@ import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.utils.ChannelFacade;
 import ar.thorium.utils.Message;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -22,6 +23,7 @@ public class HttpEventHandler implements EventHandler {
     private HttpResponseMessage httpResponseMessage;
     private ChannelFacade clientSideFacade;
     private ChannelFacade serverSideFacade;
+    private static Logger logger = Logger.getLogger(HttpEventHandler.class);
 
     public HttpEventHandler(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -29,55 +31,56 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void handleRead(ChannelFacade channelFacade, Message message) {
-        System.out.println("Handling Read from Client");
+        logger.debug("Handling read from client.");
         if (httpRequestMessage == null) {
-            System.out.println("We have a message from the client!");
+            logger.debug("A message arrived from the client.");
             httpRequestMessage = (HttpRequestMessage) message;
 
             SocketChannel channel;
             try {
                 String host = httpRequestMessage.getHeader("Host").getValue();
+//                httpRequestMessage.removeHeader("Accept-Encoding");
                 channel = SocketChannel.open(new InetSocketAddress(host, DEFAULT_HTTP_PORT));
-                System.out.println("We have a connection to the server!");
+                logger.debug("Connection with the server was established successfully.");
                 dispatcher.registerChannel(channel, new EventHandler() {
                     private boolean headersSent = false;
                     @Override
                     public void handleRead(ChannelFacade channelFacade, Message message) {
-                        System.out.println("Handling Read from Server");
-                        httpResponseMessage = (HttpResponseMessage) message;
-                        if (!headersSent) {
-                            System.out.println("Receiving Headers!");
-                            clientSideFacade.outputQueue().enqueue((httpResponseMessage.getStatusLine() + CRLF).getBytes());
-                            System.out.println("Writing Headers Back to Client!");
-                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
-                                clientSideFacade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
-                            }
-                            clientSideFacade.outputQueue().enqueue(CRLF.getBytes());
-                            headersSent = true;
-                        }
-                        int bytesToRead = 0;
-                        try {
-                            while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {
-                                System.out.println("Sending body!");
-                                byte[] bytes = new byte[bytesToRead];
-                                int bytesRead = httpResponseMessage.getBody().read(bytes);
-                                System.out.println("Read " + bytesRead + " from server. Sending to client!");
-                                clientSideFacade.outputQueue().enqueue(bytes);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
+						logger.debug("Handling read operation from server.");
+						httpResponseMessage = (HttpResponseMessage) message;
+                        if(httpResponseMessage.readyToSend()){
+	                        if (!headersSent) {
+	                        	 logger.debug("Receiving HTTP headers.");
+	                            clientSideFacade.outputQueue().enqueue((httpResponseMessage.getStatusLine() + CRLF).getBytes());
+	                            logger.debug("Writing headers back to client.");
+	                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
+	                                clientSideFacade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
+	                            }
+	                            clientSideFacade.outputQueue().enqueue(CRLF.getBytes());
+	                            headersSent = true;
+	                        }
+	                        int bytesToRead = 0;
+	                        while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {
+	                        	logger.debug("Sending body.");
+							    byte[] bytes = new byte[bytesToRead];
+							    int bytesRead = httpResponseMessage.getBody().read(bytes);
+							    logger.debug("Read " + bytesRead + " from server. Sending to client.");
+							    clientSideFacade.outputQueue().enqueue(bytes);
+							}
+	                    }else{
+	                    	logger.debug("Not Ready to Send");
+	                    }
                     }
 
                     @Override
                     public void handleWrite(ChannelFacade channelFacade) {
-                        System.out.println("Handling Write to Server");
+                        logger.debug("Handling write operation to server.");
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
 
                     @Override
                     public void handleConnection(ChannelFacade channelFacade) {
-                        System.out.println("Handling Connection from Server");
+                        logger.debug("Handling connection from server.");
                         serverSideFacade = channelFacade;
                         serverSideFacade.outputQueue().enqueue((httpRequestMessage.getRequestLine() + CRLF).getBytes());
                         for(HttpHeader header : httpRequestMessage.getHeaders()) {
@@ -97,35 +100,33 @@ public class HttpEventHandler implements EventHandler {
                     }
                 });
             } catch (IOException e) {
+                logger.error("An unknown error occurred.", e);
                 throw new UnknownError();  //To change body of catch statement use File | Settings | File Templates.
             }
         } else {
             int bytesToRead = 0;
-            try {
-                if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
-                    byte[] bytes = new byte[bytesToRead];
-                    int bytesRead = httpRequestMessage.getBody().read(bytes);
-                    serverSideFacade.outputQueue().enqueue(bytes);
-                    if (httpRequestMessage.isFinilized()) {
-                        httpRequestMessage = null;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
+            logger.debug("Receiving message from client.");
+			if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
+			    byte[] bytes = new byte[bytesToRead];
+			    int bytesRead = httpRequestMessage.getBody().read(bytes);
+			    serverSideFacade.outputQueue().enqueue(bytes);
+			    if (httpRequestMessage.isFinilized()) {
+			        httpRequestMessage = null;
+			    }
+			}
         }
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void handleWrite(ChannelFacade channelFacade) {
-        System.out.println("Handling Write to Client");
+        logger.debug("Handling write to client.");
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void handleConnection(ChannelFacade channelFacade) {
-        System.out.println("Handling Connection from Client");
+        logger.debug("Handling connection from client.");
         clientSideFacade = channelFacade;
     }
 

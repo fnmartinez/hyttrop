@@ -5,6 +5,7 @@ import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.Message;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -15,6 +16,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
 
     private byte[] message;
     private HttpMessage httpMessage;
+    private static Logger logger = Logger.getLogger(HttpMessageValidator.class);
+
 
     public HttpMessageValidator() {
         this.httpMessage = null;
@@ -25,6 +28,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     public void putInput(byte[] incomming) {
         if (incomming == null || incomming.length == 0) return;
 
+        logger.debug("Receiving a message.");
         if (httpMessage == null) {
             int newSize = incomming.length + message.length;
             byte[] newMessage = new byte[newSize];
@@ -36,6 +40,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 if (incomming[j] == 0) break;
                 newMessage[i + j] = incomming[j];
             }
+            logger.debug(j + " new bytes received.");
             message = Arrays.copyOfRange(newMessage, 0, i + j);
         } else {
             message = Arrays.copyOf(incomming, incomming.length);
@@ -45,6 +50,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     @Override
     public Message getMessage() {
         try {
+            logger.debug("Trying to get a new message.");
             if (httpMessage == null) {
                 boolean messageFound = false;
                 int i;
@@ -54,6 +60,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     }
                 }
                 if (messageFound) {
+                    logger.debug("A complete message was found.");
                     String[] headers = new String(Arrays.copyOfRange(message, 0, i)).split("\r\n");
 
                     this.httpMessage = HttpMessage.newMessage(headers[0]);
@@ -67,7 +74,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 			httpMessage.containsHeader("Content-Type") &&
                 			httpMessage.getHeader("Content-Encoding").getValue().compareTo("gzip") == 0 &&
                 			httpMessage.getHeader("Content-Type").getValue().compareTo("text/plain") == 0){
-                		httpMessage.setSpecialGziped(true);
+                		httpMessage.setGzipedStream();
                 	}
 
                     // We check that the message next three bytes aren't the last ones.
@@ -79,30 +86,32 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 }
             } else {
                 httpMessage.appendToBody(message);
-                System.out.println("All bytes appended to Message");
+                logger.debug("All bytes appended to body.");
                 message = new byte[0];
             }
             if (messageFinilized(httpMessage)) {
+                logger.debug("Message finalized.");
                 httpMessage.finilize();
             }
             return httpMessage;
         }catch (URISyntaxException e1){
+            logger.error("There is something wrong with the URI syntax.", e1);
             return HttpResponseMessage.BAD_REQUEST;
         } catch (IOException e) {
+
+            logger.error("There was an error with the origin server.");
             return HttpResponseMessage.INTERAL_SERVER_ERROR_RESPONSE;
         }
     }
 
     private boolean messageFinilized(HttpMessage httpMessage) {
     	if(httpMessage == null){
-    		System.out.println("FALSE");
     		return false;
     	}
     	if(httpMessage.containsHeader("Content-Length")){
     		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
-    		System.out.println("Content: " + length + " message: "+ httpMessage.getSize());
+            logger.info("Content: " + length + " message: "+ httpMessage.getSize());
     		if(httpMessage.getSize().compareTo(length) == 0){
-    			System.out.println("message finalized");
     			return true;
     		}else{
     			return false;
