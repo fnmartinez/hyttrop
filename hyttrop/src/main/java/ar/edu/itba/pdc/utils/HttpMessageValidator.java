@@ -58,7 +58,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 			httpMessage.containsHeader("Content-Type") &&
                 			httpMessage.getHeader("Content-Encoding").getValue().compareTo("gzip") == 0 &&
                 			httpMessage.getHeader("Content-Type").getValue().compareTo("text/plain") == 0){
-                		httpMessage.setSpecialGziped(true);
+                		httpMessage.setGzipedStream();
                 	}
 
                     // We check that the message next three bytes aren't the last ones.
@@ -80,6 +80,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
         }catch (URISyntaxException e1){
             return HttpResponseMessage.BAD_REQUEST;
         } catch (IOException e) {
+        	e.printStackTrace();
             return HttpResponseMessage.INTERAL_SERVER_ERROR_RESPONSE;
         }
     }

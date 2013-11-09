@@ -37,6 +37,7 @@ public class HttpEventHandler implements EventHandler {
             SocketChannel channel;
             try {
                 String host = httpRequestMessage.getHeader("Host").getValue();
+//                httpRequestMessage.removeHeader("Accept-Encoding");
                 channel = SocketChannel.open(new InetSocketAddress(host, DEFAULT_HTTP_PORT));
                 System.out.println("We have a connection to the server!");
                 dispatcher.registerChannel(channel, new EventHandler() {
@@ -44,30 +45,30 @@ public class HttpEventHandler implements EventHandler {
                     private boolean headersSent = false;
                     @Override
                     public void handleRead(ChannelFacade channelFacade, Message message) {
-                        System.out.println("Handling Read from Server");
+                    	System.out.println("Handling Read from Server");
                         httpResponseMessage = (HttpResponseMessage) message;
-                        if (!headersSent) {
-                            System.out.println("Receiving Headers!");
-                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((httpResponseMessage.getStatusLine() + CRLF).getBytes()));
-                            System.out.println("Writing Headers Back to Client!");
-                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
-                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((header.toString() + CRLF).getBytes()));
-                            }
-                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(CRLF.getBytes()));
-                            headersSent = true;
-                        }
-                        int bytesToRead = 0;
-                        try {
-                            while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {
-                                System.out.println("Sending body!");
-                                byte[] bytes = new byte[bytesToRead];
-                                int bytesRead = httpResponseMessage.getBody().read(bytes);
-                                System.out.println("Read " + bytesRead + " from server. Sending to client!");
-                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
+                        if(httpResponseMessage.readyToSend()){
+	                        if (!headersSent) {
+	                            System.out.println("Receiving Headers!");
+	                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((httpResponseMessage.getStatusLine() + CRLF).getBytes()));
+	                            System.out.println("Writing Headers Back to Client!");
+	                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
+	                                clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap((header.toString() + CRLF).getBytes()));
+	                            }
+	                            clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(CRLF.getBytes()));
+	                            headersSent = true;
+	                        }
+	                        int bytesToRead = 0;
+	                        while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {
+							    System.out.println("Sending body!");
+							    byte[] bytes = new byte[bytesToRead];
+							    int bytesRead = httpResponseMessage.getBody().read(bytes);
+							    System.out.println("Read " + bytesRead + " from server. Sending to client!");
+							    clientSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
+							}
+	                    }else{
+	                    	System.out.println("Not ready to send");
+	                    }
                     }
 
                     @Override
@@ -102,18 +103,14 @@ public class HttpEventHandler implements EventHandler {
             }
         } else {
             int bytesToRead = 0;
-            try {
-                if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
-                    byte[] bytes = new byte[bytesToRead];
-                    int bytesRead = httpRequestMessage.getBody().read(bytes);
-                    serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
-                    if (httpRequestMessage.isFinilized()) {
-                        httpRequestMessage = null;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
+            if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
+			    byte[] bytes = new byte[bytesToRead];
+			    int bytesRead = httpRequestMessage.getBody().read(bytes);
+			    serverSideFacade.outputQueue().enqueue(ByteBuffer.wrap(bytes));
+			    if (httpRequestMessage.isFinilized()) {
+			        httpRequestMessage = null;
+			    }
+			}
         }
         //To change body of implemented methods use File | Settings | File Templates.
     }
