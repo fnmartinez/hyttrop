@@ -27,7 +27,7 @@ public class NadaHandler implements EventHandler {
         if (firstConnection) {
             ByteBuffer bf = ByteBuffer.allocate(1024);
             bf.put("Hola ".getBytes());
-            channelFacade.outputQueue().enqueue(bf);
+            channelFacade.outputQueue().enqueue(bf.array());
             firstConnection = false;
         }
     }

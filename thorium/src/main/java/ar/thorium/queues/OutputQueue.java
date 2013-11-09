@@ -11,8 +11,7 @@ public interface OutputQueue {
 	boolean isEmpty();
 	int drainTo(ByteChannel channel) throws IOException;
 	void setChannelFacade(ChannelFacade channelFacade);
-	boolean enqueue(ByteBuffer byteBuffer, boolean close);
-	boolean enqueue(ByteBuffer byteBuffer);
-	public boolean getClose();
+	boolean enqueue(byte[] bytes);
+	public boolean isClosed();
 	
 }

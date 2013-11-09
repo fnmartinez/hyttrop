@@ -3,6 +3,7 @@ package ar.thorium.queues.implementations;
 import ar.thorium.queues.OutputQueue;
 import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.ChannelFacade;
+import com.sun.deploy.util.ArrayUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,75 +12,67 @@ import java.util.Deque;
 import java.util.LinkedList;
 
 public class BasicOutputQueue implements OutputQueue {
+    private final float QUEUE_GROWTH_FACTOR = 1.1f;
 	private final BufferFactory bufferFactory;
-	private final Deque<ByteBuffer> queue;
+	private byte[] queue;
+    private int size;
 	private ChannelFacade facade;
-	private ByteBuffer active = null;
 	private boolean close = false;
 
 	public BasicOutputQueue(BufferFactory bufferFactory) {
 		this.bufferFactory = bufferFactory;
-		queue = new LinkedList<ByteBuffer>();
+		queue = new byte[0];
+        size = 0;
 	}
 
 	public synchronized boolean isEmpty() {
-		return (active == null) && (queue.size() == 0);
+		return (size == 0);
 	}
 	
 	public synchronized int drainTo(ByteChannel channel) throws IOException {
-		int bytesWritten = 0;
+		int bytesWritten = channel.write(ByteBuffer.wrap(queue).asReadOnlyBuffer());
 
-		while (true) {
-			if (active == null) {
-				if (queue.size() == 0)
-					break;
+        if (bytesWritten == 0) {
+            return bytesWritten;
+        }
 
-				active = queue.removeFirst();
-				active.flip();
-			}
+        resizeQueue(size - bytesWritten);
 
-			int rc = channel.write(active);
-			bytesWritten += rc;
-
-			if (!active.hasRemaining()) {
-				bufferFactory.returnBuffer(active);
-				active = null;
-			}
-
-			if (rc == 0)
-				break;
-		}
-
-		return bytesWritten;
+        return bytesWritten;
 	}
 
-	// -- not needed by framework
+    private void resizeQueue(int newSize) {
+        if (newSize == 0) {
+            queue = new byte[0];
+        } else {
+            byte[] newQueue = new byte[newSize];
+            if (newSize < size) {
+                for (int i = 0; i < newQueue.length; i++) {
+                    newQueue[i] = queue[size - newSize + i];
+                }
+            } else if (newSize > size) {
+                for (int i = 0; i < queue.length; i++) {
+                    newQueue[i] = queue[i];
+                }
+            }
+            queue = newQueue;
+        }
+        size = newSize;
+    }
 
-	public synchronized boolean enqueue(ByteBuffer byteBuffer, boolean close) {
-		this.close = close;
-		return enqueue(byteBuffer);
-	}
-	
-	public synchronized boolean enqueue(ByteBuffer byteBuffer) {
-		if (byteBuffer.remaining() == 0) {
-			return false;
-		}
+	public synchronized boolean enqueue(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return false;
+        }
 
-		if (queue.size() > 0) {
-			ByteBuffer tail = queue.getLast();
+        if (bytes.length + size >= queue.length) {
+            resizeQueue((int)((bytes.length + queue.length) * 1.1f));
+        }
+        for (int i = 0; i < bytes.length; i++) {
+            queue[size + i] = bytes[i];
+        }
 
-			if (tail.hasRemaining()) {
-				topUpBuffer(tail, byteBuffer);
-			}
-		}
-
-		while (byteBuffer.hasRemaining()) {
-			ByteBuffer newBuf = bufferFactory.newBuffer();
-
-			topUpBuffer(newBuf, byteBuffer);
-
-			queue.addLast(newBuf);
-		}
+		size += bytes.length;
 
 		if (facade != null) {
 			facade.enableWriting();
@@ -88,18 +81,7 @@ public class BasicOutputQueue implements OutputQueue {
 		return true;
 	}
 
-	private void topUpBuffer(ByteBuffer dest, ByteBuffer src) {
-		if (src.remaining() <= dest.remaining()) {
-			dest.put(src);
-		} else {
-			// TODO: make this more efficient with buffer slice?
-			while (dest.hasRemaining()) {
-				dest.put(src.get());
-			}
-		}
-	}
-
-	public synchronized boolean getClose(){
+	public synchronized boolean isClosed(){
 		return this.close;
 	}
 	

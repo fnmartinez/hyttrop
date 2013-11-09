@@ -75,7 +75,7 @@ public class NadaProtocol implements EventHandlerFactory<NadaHandler> {
 
         public void send (String message)
         {
-            facade.outputQueue().enqueue(ByteBuffer.wrap(message.getBytes()));
+            facade.outputQueue().enqueue(message.getBytes());
         }
 
         public void sendTo (NadaUser recipient, String message)

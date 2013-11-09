@@ -111,7 +111,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             System.out.println("Tengo la cola vac��a!");
             disableWriteSelection();
 
-            if (shuttingDown || outputQueue.getClose()) {
+            if (shuttingDown || outputQueue.isClosed()) {
                 System.out.println("Cierro el canal!");
                 channel.close();
                 eventHandler.stopped(this);

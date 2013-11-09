@@ -22,14 +22,21 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     }
 
     @Override
-    public void putInput(ByteBuffer byteBuffer) {
+    public void putInput(byte[] incomming) {
+        if (incomming == null || incomming.length == 0) return;
+
         if (httpMessage == null) {
-            byte[] incomming = new byte[byteBuffer.limit()];
-            byteBuffer.get(incomming);
-            message = ArrayUtils.addAll(message, incomming);
+            int newSize = incomming.length + message.length;
+            byte[] newMessage = new byte[newSize];
+            for (int i = 0; i < message.length; i++) {
+                newMessage[i] = message[i];
+            }
+            for (int i = 0; i < newMessage.length; i++) {
+                newMessage[message.length + i] = incomming[i];
+            }
+            message = newMessage;
         } else {
-            message = new byte[byteBuffer.limit()];
-            byteBuffer.get(message);
+            message = Arrays.copyOf(incomming, incomming.length);
         }
     }
 

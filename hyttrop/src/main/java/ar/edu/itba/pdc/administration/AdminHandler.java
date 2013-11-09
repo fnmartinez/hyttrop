@@ -18,7 +18,7 @@ public class AdminHandler implements EventHandler {
     @Override
     public void handleRead(ChannelFacade channelFacade, Message message) {
         ByteBuffer response = protocol.handleMessage((ByteBuffer)message);
-        channelFacade.outputQueue().enqueue(response);
+        channelFacade.outputQueue().enqueue(response.array());
     }
 
     @Override

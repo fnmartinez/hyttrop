@@ -8,13 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: facundo
- * Date: 02/11/13
- * Time: 16:33
- * To change this template use File | Settings | File Templates.
- */
 public class NadaValidator implements SimpleMessageValidator {
 
     private List<Byte> message;
@@ -24,8 +17,8 @@ public class NadaValidator implements SimpleMessageValidator {
     }
 
     @Override
-    public void putInput(ByteBuffer byteBuffer) {
-        for(byte b : byteBuffer.array()) {
+    public void putInput(byte[] bytes) {
+        for(byte b : bytes) {
             this.message.add(b);
         }
     }

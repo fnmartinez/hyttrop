@@ -4,13 +4,31 @@ import java.util.ArrayList;
 
 import java.util.ArrayList;
 
-import ar.edu.itba.it.pdc.jabxy.model.JabxyUser;
-import ar.edu.itba.it.pdc.jabxy.model.administration.AdminProtocol.AdminProtocolActions;
-import ar.edu.itba.it.pdc.jabxy.model.transformations.TransformationChain;
-import ar.edu.itba.it.pdc.jabxy.model.transformations.TransformationL33t;
-import ar.edu.itba.it.pdc.jabxy.services.UserService;
-
 public class SetL33tCommand implements Command {
 
 
+    @Override
+    public String getName() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String execute(String[] args) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String shortHelp() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String descriptiveHelp() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean acceptsAction(AdminProtocol.AdminProtocolActions action) {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

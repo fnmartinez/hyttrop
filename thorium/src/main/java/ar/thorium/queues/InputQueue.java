@@ -9,11 +9,7 @@ import java.nio.channels.ByteChannel;
 public interface InputQueue {
 
 	int fillFrom(ByteChannel channel) throws IOException;
-
 	boolean isEmpty();
     int size();
-	int indexOf(byte b);
-	ByteBuffer dequeueBytes(int count);
-	void discardBytes(int count);
     Message getMessage();
 }

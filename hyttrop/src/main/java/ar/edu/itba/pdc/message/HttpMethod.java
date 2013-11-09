@@ -12,7 +12,7 @@ public enum HttpMethod {
     DELETE("DELETE"),
     TRACE("TRACE"),
     CONNECT("CONNECT"),
-    UNKNOWN("UKNOWN");
+    UNKNOWN("UNKNOWN");
 
     private final static Map<String, HttpMethod> methodMap;
 
