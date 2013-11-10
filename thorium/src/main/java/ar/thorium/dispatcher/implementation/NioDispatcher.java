@@ -12,6 +12,7 @@ import ar.thorium.utils.ChannelFacade;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -138,6 +139,9 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             while (true) {
                 try {
+                    if (statusChangeQueue.contains(pair)) {
+
+                    }
                     if (logger.isDebugEnabled()) logger.debug("Enqueing status change for adapter " + adapter);
                     statusChangeQueue.put(pair);
                     selector.wakeup();
@@ -163,8 +167,14 @@ public class NioDispatcher implements Dispatcher, Runnable {
     }
 
     private void invokeHandler(HandlerAdapter adapter, SelectionKey key) {
+        try {
         adapter.prepareToRun(key);
         adapter.key().interestOps(0);
+        } catch (CancelledKeyException cke) {
+            logger.error("Key has been cancelled", cke);
+            adapter.die();
+            return;
+        }
         executor.execute(new HandlerFutureTask(adapter, this, key));
     }
 
@@ -227,6 +237,26 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
         public S getHandle() {
             return this.handle;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Pair)) return false;
+
+            Pair pair = (Pair) o;
+
+            if (handle != null ? !handle.equals(pair.handle) : pair.handle != null) return false;
+            if (object != null ? !object.equals(pair.object) : pair.object != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = object != null ? object.hashCode() : 0;
+            result = 31 * result + (handle != null ? handle.hashCode() : 0);
+            return result;
         }
     }
 }

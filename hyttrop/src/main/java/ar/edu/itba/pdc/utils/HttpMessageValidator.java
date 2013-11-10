@@ -10,9 +10,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 public class HttpMessageValidator implements SimpleMessageValidator {
 
@@ -64,7 +62,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
 
                     // We check that the message next three bytes aren't the last ones.
                     if ( i + 3 <= message.length -1) {
-                        if (logger.isTraceEnabled()) logger.trace("New message comes with body of " + (message.length - (i + 3)) + " bytes");
+                        if (logger.isDebugEnabled()) logger.debug("New message comes with body of " + (message.length - (i + 3)) + " bytes");
                         if (logger.isTraceEnabled()) logger.trace(new String(message));
                     	//message.length -1
                         httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));

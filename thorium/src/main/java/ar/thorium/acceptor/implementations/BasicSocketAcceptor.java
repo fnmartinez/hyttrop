@@ -84,8 +84,13 @@ public class BasicSocketAcceptor implements Acceptor {
 
 	private class Listener implements Runnable {
 		public void run() {
-            logger.info("-------------- Starting listener at " + listenSocket.socket().getInetAddress() + "--------------");
-			while (running) {
+            try {
+                logger.info("-------------- Starting listener at " + listenSocket.getLocalAddress() + "--------------");
+            } catch (IOException e) {
+                logger.fatal("Cannot run acceptor.", e);
+                throw new UnknownError();
+            }
+            while (running) {
 				try {
 					SocketChannel client = listenSocket.accept();
 
