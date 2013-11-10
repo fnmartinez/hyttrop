@@ -34,7 +34,6 @@ public class BasicInputQueueFactory extends InputQueueFactory {
             throw new QueueBuildingException();
         }
 
-        logger.info("New input queue created.");
 		return new BasicInputQueue(bufferFactory, newValidator);
 	}
 

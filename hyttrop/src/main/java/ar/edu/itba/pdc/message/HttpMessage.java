@@ -36,14 +36,14 @@ public abstract class HttpMessage implements Message {
 
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
-        logger.info("Receiving a new Http message.");
+        if (logger.isTraceEnabled()) logger.trace("HttpMessage:newMessage; firstLine:" + firstLine);
         String[] firstLineArray = firstLine.split(" ");
 
         if (firstLine.startsWith("HTTP")) {
-            logger.info("The new message is a response.");
             HttpResponseMessage responseMessage;
             String protocol = firstLineArray[0];
             HttpStatusCode statusCode = HttpStatusCode.getStatusCode(Integer.parseInt(firstLineArray[1]));
+            if (logger.isDebugEnabled()) logger.debug("The new message is a response of kind " + statusCode.toString());
             if (statusCode.equals(HttpStatusCode.SC_UNKNOWN)) {
                 StringBuilder sb = new StringBuilder();
                 for(int i = 2; i < firstLineArray.length; i++) {
@@ -55,10 +55,10 @@ public abstract class HttpMessage implements Message {
             }
             return responseMessage;
         } else if (firstLineArray.length == 3) {
-            logger.info("The new message is a request.");
             HttpRequestMessage requestMessage;
             HttpMethod method = HttpMethod.getMethod(firstLineArray[0].trim());
             String protocol = firstLineArray[2].trim();
+            if (logger.isDebugEnabled()) logger.debug("The new message is a request of kind " + method.toString());
             if (method.equals(HttpMethod.UNKNOWN)) {
                 requestMessage = new HttpRequestMessage(method, new URI("*"), protocol, firstLine);
             } else {
@@ -102,6 +102,7 @@ public abstract class HttpMessage implements Message {
 	}
 
 	public void appendToBody(byte[] bytes) throws IOException {
+        if (logger.isDebugEnabled()) logger.debug("Appending " + bytes.length + " to body");
 		addSize(bytes.length);
 		if (!specialGziped && headers.containsKey("Content-Type")) {
 			if (headers.get("Content-Type").getValue().compareTo("text/plain") == 0) {
@@ -120,6 +121,7 @@ public abstract class HttpMessage implements Message {
 	}
 
 	public void setHeader(final String field, final String content) {
+        if (logger.isTraceEnabled()) logger.trace("Adding header " + field + " with content \"" + content + "\"");
 		headers.put(field, new HttpHeader(field, content));
 	}
 
@@ -141,8 +143,7 @@ public abstract class HttpMessage implements Message {
 			try {
 				this.queue.write(L33tConversion.gzipedConvert(this.queue));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+                logger.error(e);
 			}
 		}
 	}

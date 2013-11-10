@@ -14,21 +14,17 @@ public class ByteArrayQueue {
 
 	public synchronized void write(byte[] elems) {
 		arr.set(ArrayUtils.addAll(arr.get(), elems));
-		System.out.println("Array size: " + arr.get().length);
 	}
 
 	public synchronized Integer read(byte[] resp) {
 		int size = 0;
-		System.out.println(resp.length);
-		System.out.println(arr.get().length);
-		
+
 		if(arr.get().length <= resp.length){
 			size = arr.get().length;
 		}else{
 			size = resp.length;
 		}
-		System.out.println(size);
-		
+
 		byte[] newArr = ArrayUtils.subarray(arr.get(), 0, size);
 		System.out.println(newArr.length);
 		for(int i = 0; i < size; i++){

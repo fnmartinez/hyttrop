@@ -11,10 +11,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 
 public class BasicInputQueue implements InputQueue {
-	private final BufferFactory bufferFactory;
+    private static Logger logger = Logger.getLogger(BasicInputQueue.class);
+
+    private final BufferFactory bufferFactory;
     private int bytesRead;
     private SimpleMessageValidator validator;
-    private static Logger logger = Logger.getLogger(BasicInputQueue.class);
     private boolean closed;
 
     public BasicInputQueue(BufferFactory bufferFactory, SimpleMessageValidator validator) {
@@ -29,9 +30,8 @@ public class BasicInputQueue implements InputQueue {
         int read;
         do {
             ByteBuffer buffer = bufferFactory.newBuffer();
-            logger.debug("New buffer created.");
             read = channel.read(buffer);
-            logger.debug("Buffer was filled from the channel with " + read + ".");
+            if (logger.isDebugEnabled()) logger.debug(read + " bytes read from channel.");
             if (read > 0) {
                 fillRead += read;
                 bytesRead += read;
@@ -64,7 +64,6 @@ public class BasicInputQueue implements InputQueue {
         if (message != null) {
             bytesRead = 0;
         }
-        logger.debug("Message returned from input queue.");
         return message;
     }
 }

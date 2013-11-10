@@ -44,24 +44,25 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     @Override
     public HandlerAdapter call() throws IOException {
+        if (logger.isDebugEnabled()) logger.debug(this.toString() + " being invoked");
         try {
             if (!connectionHandled || (readyOps & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) {
                 eventHandler.handleConnection(this);
                 connectionHandled = true;
                 this.enableWriteSelection();
-                logger.debug("Handler caller to connect.");
+                if (logger.isDebugEnabled()) logger.debug(this.toString() + " handled connection.");
             } else {
                 if((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE){ //si voy a escribir en el canal
                     eventHandler.handleWrite(this);
                     drainOutput();
-                    logger.debug("Handler caller to write.");
+                    if (logger.isDebugEnabled()) logger.debug(this.toString() + " handled write operation.");
                 }
                 if((readyOps & SelectionKey.OP_READ) == SelectionKey.OP_READ){ //si voy a leer
                     fillInput();
                     Message message;
                     if(!inputQueue.isEmpty() && (message = inputQueue.getMessage()) != null){
                         eventHandler.handleRead(this, message);
-                        logger.debug("Handler caller to read.");
+                        if (logger.isDebugEnabled()) logger.debug(this.toString() + " handled read operation.");
                     }
                 }
             }
@@ -104,18 +105,18 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     private void drainOutput() throws IOException {
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
-            logger.debug("Queue drained.");
+            if (logger.isTraceEnabled()) logger.trace("Queue drained.");
             outputQueue.drainTo((ByteChannel) channel);
         }
 
         // Write selection is turned on when output data in enqueued,
         // turn it off when the queue becomes empty.
         if (outputQueue.isEmpty()) {
-            logger.debug("Queue is empty.");
+            if (logger.isTraceEnabled()) logger.trace("Queue is empty.");
             disableWriteSelection();
 
             if (shuttingDown || outputQueue.isClosed()) {
-                logger.debug("Channel was closed.");
+                if (logger.isTraceEnabled()) logger.trace("Channel was closed.");
                 channel.close();
                 eventHandler.stopped(this);
             }
@@ -129,7 +130,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
         if (shuttingDown)
             return;
 
-        int rc = inputQueue.fillFrom((ByteChannel) channel);
+        inputQueue.fillFrom((ByteChannel) channel);
         if (inputQueue.isClosed()) {
             disableReadSelection();
 
@@ -145,7 +146,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 }
             }
 
-            logger.debug("End of stream reached.");
+            if (logger.isDebugEnabled()) logger.debug("End of stream reached.");
 
             shuttingDown = true;
             eventHandler.stopping(this);
@@ -172,7 +173,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
                 interestOps = key.interestOps();
                 readyOps = key.readyOps();
                 running = true;
-                logger.debug("Handler prepared to run.");
+                if (logger.isDebugEnabled()) logger.debug("Handler ready to run.");
             } else {
                 logger.error("Incorrect key received.");
                 throw new IllegalArgumentException("This is not my key");
@@ -201,11 +202,13 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
 
     public void enableWriting() {
+        if (logger.isTraceEnabled()) logger.trace(this.toString() + " enabling writing");
         enableWriteSelection();
         issueChange(key);
     }
 
     public void enableReading() {
+        if (logger.isTraceEnabled()) logger.trace(this.toString() + " enabling reading");
         enableReadSelection();
         issueChange(key);
     }
@@ -231,13 +234,13 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     }
 
     public void die() {
-        logger.debug("Handler died.");
+        logger.info(this.toString() + " died.");
         this.dead = true;
     }
 
     protected int modifyInterestOps(int ops, int opsToSet, int opsToReset) {
+        if (logger.isTraceEnabled()) logger.trace("Modifying interests ops: CurrentOps=" + ops + " OpsToSet=" + opsToSet + " OpsToReset=" + opsToReset);
         ops = (ops | opsToSet) & (~opsToReset);
-        logger.debug("InterestOpts modified.");
         return ops;
     }
 
@@ -252,5 +255,12 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     public boolean connectionHandled() {
         return connectionHandled;
+    }
+
+    @Override
+    public String toString() {
+        return "HandlerAdapter{" +
+                "channel=" + channel +
+                '}';
     }
 }

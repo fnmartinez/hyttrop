@@ -13,11 +13,10 @@ public class HttpResponseMessage extends HttpMessage {
 
     static {
         try {
-            logger.info("Creating 'Bad request' response message.");
             BAD_REQUEST = new HttpResponseMessage("HTTP/1.1", HttpStatusCode.SC_BAD_REQUEST);
             INTERAL_SERVER_ERROR_RESPONSE = new HttpResponseMessage("HTTP/1.1", HttpStatusCode.SC_INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
-            logger.error("An unknown error occurred while creating 'Bad request' response message.", e);
+            logger.fatal("An unknown error occurred while creating 'Bad request' response message.", e);
             throw new UnknownError();
         }
     }
@@ -59,4 +58,12 @@ public class HttpResponseMessage extends HttpMessage {
         return protocol + " " + code + " " + reasonPhrase;
     }
 
+    @Override
+    public String toString() {
+        return "HttpResponseMessage{" +
+                "protocol='" + protocol + '\'' +
+                ", statusCode=" + statusCode +
+                ", reasonPhrase='" + reasonPhrase + '\'' +
+                '}';
+    }
 }

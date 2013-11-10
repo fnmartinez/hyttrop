@@ -44,6 +44,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
     @Override
     public void dispatch() throws IOException {
+        logger.info("Beginning to dispatch");
         while (dispatching) {
             guard.selectorBarrier();
 
@@ -52,12 +53,12 @@ public class NioDispatcher implements Dispatcher, Runnable {
             checkStatusChangeQueue();
 
             Set<SelectionKey> keys = selector.selectedKeys();
-
+            if (logger.isTraceEnabled()) logger.trace("Selected " + keys.size() + " keys");
             for (SelectionKey key : keys) {
-                logger.debug("Dispatching connection.");
                 HandlerAdapter adapter = (HandlerAdapter) key.attachment();
+                if (logger.isDebugEnabled()) logger.debug("Dispatching connection " + adapter);
                 invokeHandler(adapter, key);
-                logger.debug("Connection dispatched.");
+                if (logger.isDebugEnabled()) logger.debug("Connection dispatched." + adapter);
             }
 
             keys.clear();
@@ -66,34 +67,29 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
     @Override
     public void shutdown() {
-        logger.debug("Dispatcher shutting down.");
+        logger.info("Dispatcher " + this.toString() + " shutting down");
         dispatching = false;
         selector.wakeup();
     }
 
     @Override
     public ChannelFacade registerChannel(SelectableChannel channel, EventHandler handler) throws IOException {
+        if (logger.isTraceEnabled()) logger.trace("NioDispatcher::registerChannel; channel=" + channel + " handler=" + handler);
         channel.configureBlocking(false);
 
         HandlerAdapter adapter;
         try {
-            logger.debug("Creating new adapter.");
             adapter = new HandlerAdapter(this, inputQueueFactory.newInputQueue(), outputQueueFactory.newOutputQueue(), handler);
-            logger.debug("Adapter created.");
         } catch (QueueBuildingException e) {
             logger.error("Adapter could not be created.", e);
             throw new IOException(e);
         }
-        logger.debug("Acquiring selector.");
         acquireSelector();
-        logger.debug("Selector acquired.");
 
         try {
-            logger.debug("Registering channel.");
             SelectionKey key = channel.register(getSelector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE,
                     adapter);
             adapter.setKey(key);
-            logger.debug("Channel registered.");
             return adapter;
         }catch(Exception e){
             logger.error("Channel could not be registered.", e);
@@ -120,7 +116,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             adapter.unregistering();
             selectionKey.cancel();
-            logger.debug("Channel unregistered.");
+            logger.info("Channel unregistered.");
         } finally {
             releaseSelector();
         }
@@ -142,7 +138,7 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             while (true) {
                 try {
-                    logger.debug("Enqueing status change.");
+                    if (logger.isDebugEnabled()) logger.debug("Enqueing status change for adapter " + adapter);
                     statusChangeQueue.put(pair);
                     selector.wakeup();
                     return;
@@ -162,14 +158,13 @@ public class NioDispatcher implements Dispatcher, Runnable {
         Thread thread = new Thread(this);
 
         thread.start();
-        logger.debug("Dispatcher started.");
+        logger.info("Dispatcher started.");
         return thread;
     }
 
     private void invokeHandler(HandlerAdapter adapter, SelectionKey key) {
         adapter.prepareToRun(key);
         adapter.key().interestOps(0);
-        logger.debug("Invoking handler.");
         executor.execute(new HandlerFutureTask(adapter, this, key));
     }
 
@@ -196,8 +191,10 @@ public class NioDispatcher implements Dispatcher, Runnable {
             logger.fatal("Unexpected I/O Exception", e);
         }
 
+        logger.info("Clossing dispatcher");
         Set<SelectionKey> keys = selector.selectedKeys();
 
+        logger.info("Unregistering channels");
         for (SelectionKey key : keys) {
             HandlerAdapter adapter = (HandlerAdapter) key.attachment();
 

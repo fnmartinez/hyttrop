@@ -52,14 +52,13 @@ public class BasicSocketAcceptor implements Acceptor {
 		thread = dispatcher.start();
 		threads.add(thread);
 
-        logger.debug("New thread created.");
 		return thread;
 	}
 
 	@Override
 	public synchronized void shutdown() {
 
-        logger.debug("Shutting down.");
+        logger.info("-------------- Shutting down acceptor " + this.toString() + " --------------");
         running = false;
 
         for(Thread t : this.threads) {
@@ -70,7 +69,6 @@ public class BasicSocketAcceptor implements Acceptor {
 
         for(Thread t : this.threads) {
             try {
-                logger.debug("Trying to join thread.");
                 t.join();
             } catch (InterruptedException e) {
                 logger.error("An error occurred.", e);
@@ -86,10 +84,12 @@ public class BasicSocketAcceptor implements Acceptor {
 
 	private class Listener implements Runnable {
 		public void run() {
+            logger.info("-------------- Starting listener at " + listenSocket.socket().getInetAddress() + "--------------");
 			while (running) {
 				try {
 					SocketChannel client = listenSocket.accept();
 
+                    logger.info("New connection from " + client.getRemoteAddress());
 					if (client == null) {
 						continue;
 					}
