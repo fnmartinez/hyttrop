@@ -10,7 +10,7 @@ import java.nio.channels.ByteChannel;
 
 public class BasicOutputQueue implements OutputQueue {
     private static Logger logger = Logger.getLogger(BasicOutputQueue.class);
-    private final float QUEUE_GROWTH_FACTOR = 1.1f;
+    private final float QUEUE_GROWTH_FACTOR = 1.0f;
 	private byte[] queue;
     private int size;
 	private ChannelFacade facade;
