@@ -4,6 +4,7 @@ import ar.edu.itba.pdc.message.HttpMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.Message;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -11,13 +12,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 public class HttpMessageValidator implements SimpleMessageValidator {
 
     private byte[] message;
     private HttpMessage httpMessage;
     private static Logger logger = Logger.getLogger(HttpMessageValidator.class);
-
 
     public HttpMessageValidator() {
         this.httpMessage = null;
@@ -37,16 +38,14 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 newMessage[i] = message[i];
             }
             for (j = 0; j < incomming.length; j++) {
-                if (incomming[j] == 0) break;
+                //if (incomming[j] == 0) break;
                 newMessage[i + j] = incomming[j];
             }
             if (logger.isDebugEnabled()) logger.debug(j + " new bytes received.");
             message = Arrays.copyOfRange(newMessage, 0, i + j);
         } else {
             if (logger.isDebugEnabled()) logger.debug("Receiving new body part");
-            int i;
-            for (i = 0; i < incomming.length && incomming[i] != 0; i++);
-            message = Arrays.copyOf(incomming, i);
+            message = incomming;
         }
     }
 
@@ -69,8 +68,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     if (logger.isDebugEnabled()) logger.debug(httpMessage);
 
                     for(int j = 1; j < headers.length; j++) {
-                        String[] headerValue = headers[j].split(":");
-                        httpMessage.setHeader(headerValue[0].trim(), headerValue[1].trim());
+                    	int index = headers[j].indexOf(":");
+                        httpMessage.setHeader(headers[j].substring(0, index).trim(), headers[j].substring(index+1).trim());
                     }
                     
                     if(httpMessage.containsHeader("Content-Encoding") && 
@@ -81,8 +80,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 	}
 
                     // We check that the message next three bytes aren't the last ones.
-                    if ( i + 3 <= message.length -1 && message[i + 4] != 0) {
-                        if (logger.isTraceEnabled()) logger.trace("New message comes with body of " + (message.length - (i + 3)) + " bytes");
+                    if ( i + 3 <= message.length -1) {
+                        if (logger.isDebugEnabled()) logger.debug("New message comes with body of " + (message.length - (i + 3)) + " bytes");
                         if (logger.isTraceEnabled()) logger.trace(new String(message));
                     	//message.length -1
                         httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));
@@ -118,6 +117,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     	if(httpMessage.containsHeader("Content-Length")){
     		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
             if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + length + " Message body size: "+ httpMessage.getSize());
+
     		if(httpMessage.getSize().compareTo(length) == 0){
     			return true;
     		}else{

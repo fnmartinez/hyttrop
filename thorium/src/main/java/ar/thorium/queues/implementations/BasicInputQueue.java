@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.util.Arrays;
 
 public class BasicInputQueue implements InputQueue {
     private static Logger logger = Logger.getLogger(BasicInputQueue.class);
@@ -35,7 +36,7 @@ public class BasicInputQueue implements InputQueue {
             if (read > 0) {
                 fillRead += read;
                 bytesRead += read;
-                validator.putInput(buffer.array());
+                validator.putInput(Arrays.copyOfRange(buffer.array(), 0, read));
             }
         } while (read > 0);
         if (read == -1) {
