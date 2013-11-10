@@ -1,26 +1,34 @@
-package ar.edu.itba.pdc.utils;
+package ar.edu.itba.pdc.transformations;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.Inflater;
-
-import org.apache.commons.lang.ArrayUtils;
 
 
+import ar.edu.itba.pdc.utils.ByteArrayQueue;
 import org.apache.log4j.Logger;
 
-public class L33tConversion {
+public class L33tTransformation implements Transformation{
 
-    private static Logger logger = Logger.getLogger(L33tConversion.class);
+    private static Logger logger = Logger.getLogger(L33tTransformation.class);
 
-	public static byte[] convert(byte[] bytes){
+    private static L33tTransformation INSTANCE = null;
+
+    private L33tTransformation(){
+    }
+
+    private synchronized static void createInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new L33tTransformation();
+        }
+    }
+
+    public static L33tTransformation getInstance() {
+        createInstance();
+        return INSTANCE;
+    }
+
+	public void transform(byte[] bytes){
         logger.info("Applying l33t conversion.");
 		for(int i = 0; i< bytes.length; i++){
 			switch(bytes[i]){
@@ -37,7 +45,6 @@ public class L33tConversion {
 			default: break;
 			}
 		}
-		return bytes;
 	}
 	
 	public static byte[] gzipedConvert(ByteArrayQueue arr) throws IOException{

@@ -13,5 +13,6 @@ public interface OutputQueue {
 	void setChannelFacade(ChannelFacade channelFacade);
 	boolean enqueue(byte[] bytes);
 	public boolean isClosed();
+    public byte[] getQueue();
 	
 }

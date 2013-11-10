@@ -3,6 +3,7 @@ package ar.edu.itba.pdc.handler;
 import ar.edu.itba.pdc.message.HttpHeader;
 import ar.edu.itba.pdc.message.HttpRequestMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
+import ar.edu.itba.pdc.transformations.TransformationChain;
 import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.utils.ChannelFacade;
@@ -128,6 +129,8 @@ public class HttpEventHandler implements EventHandler {
     @Override
     public void handleWrite(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Handling write from client; ChannelFacade: " + channelFacade);
+
+        TransformationChain.getInstance().transform(channelFacade.outputQueue().getQueue());
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

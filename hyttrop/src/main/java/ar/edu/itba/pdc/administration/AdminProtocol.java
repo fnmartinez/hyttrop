@@ -32,20 +32,20 @@ public class AdminProtocol {
     private CharsetDecoder decoder;
     private CharsetEncoder encoder;
 
-    public AdminProtocol() {
+    public AdminProtocol() { //constructor, establezco el encoding.
         this.charset = Charset.forName("UTF-8");
         this.decoder = charset.newDecoder();
         this.encoder = charset.newEncoder();
     }
 
-    public ByteBuffer handleMessage(ByteBuffer message) {
-        String commandLine = decodeMessage(message);
+    public ByteBuffer handleMessage(AdminMessage message) { //a este le mando un bytebuffer con cosas, que serian un mensaje.
+        String commandLine = message.getMessage();
         String response = interpretCommand(commandLine);
         ByteBuffer encodedResponse = encodeMessage(response);
         return encodedResponse;
     }
 
-    private String interpretCommand(String commandLine) {
+    private String interpretCommand(String commandLine) { //llega un mensaje nuevo, veo que es.
         String[] tokens = commandLine.split("\\s");
         Command cmd = null;
         if (tokens.length == 1)
@@ -53,7 +53,7 @@ public class AdminProtocol {
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.HELP.string)) {
             }
             else{
-                return createErrorResponse("Action unknown or unsupported");
+                return createErrorResponse("Action unknown or unsupported.\n");
             }
         }
         if ((cmd = commands.get(tokens[1])) != null) {
@@ -61,26 +61,26 @@ public class AdminProtocol {
                 if (cmd.acceptsAction(AdminProtocolActions.GET)) {
                     return cmd.execute(tokens);
                 } else {
-                    return createErrorResponse("This command does not support GET method");
+                    return createErrorResponse("This command does not support GET method.\n");
                 }
             }
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.SET.string)) {
                 if (cmd.acceptsAction(AdminProtocolActions.SET)) {
                     return cmd.execute(tokens);
                 } else {
-                    return createErrorResponse("This command does not support SET method");
+                    return createErrorResponse("This command does not support SET method.\n");
                 }
             }
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.HELP.string)) {
                 if (cmd.acceptsAction(AdminProtocolActions.HELP)) {
                     return cmd.descriptiveHelp();
                 } else {
-                    return createErrorResponse("This command does not support HELP method");
+                    return createErrorResponse("This command does not support HELP method.\n");
                 }
             }
-            return createErrorResponse("Action unknown or unsupported");
+            return createErrorResponse("Action unknown or unsupported.\n");
         } else {
-            return createErrorResponse("Unknown command");
+            return createErrorResponse("Unknown command.\n");
         }
     }
 
@@ -107,7 +107,7 @@ public class AdminProtocol {
         commands.remove(c.getName());
     }
 
-    private String decodeMessage(ByteBuffer message) {
+    private String decodeMessage(ByteBuffer message) { //este agarra el bytebuffer y lo pasa a string.
         String data = "";
         int old_position = message.position();
         try {
@@ -122,7 +122,7 @@ public class AdminProtocol {
         return data;
     }
 
-    private ByteBuffer encodeMessage(String message) {
+    private ByteBuffer encodeMessage(String message) { //este hace lo opuesto.
         try {
             return encoder.encode(CharBuffer.wrap(message));
         } catch (CharacterCodingException e) {
