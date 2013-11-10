@@ -14,7 +14,7 @@ import java.util.Map;
 
 public abstract class HttpMessage implements Message {
 
-	private boolean finilized;
+	private boolean finalized;
 	protected Map<String, HttpHeader> headers;
 	// protected InputStream exposedBody;
 	protected ByteArrayQueue queue;
@@ -68,7 +68,7 @@ public abstract class HttpMessage implements Message {
 		// ByteArrayInputStream(((ByteArrayOutputStream)this.privateBody).toByteArray());
 		// this.exposedBody = new PipedInputStream(
 		// (PipedOutputStream) this.privateBody);
-		this.finilized = false;
+		this.finalized = false;
 		this.specialGziped = false;
 		this.totalBodySize = 0;
 		this.queue = new ByteArrayQueue();
@@ -103,7 +103,7 @@ public abstract class HttpMessage implements Message {
 	}
 
 	public boolean readyToSend() {
-		if ((specialGziped && isFinilized()) || (!specialGziped)) {
+		if ((specialGziped && isFinalized()) || (!specialGziped)) {
 			return true;
 		}
 		return false;
@@ -122,13 +122,13 @@ public abstract class HttpMessage implements Message {
 		return this.totalBodySize;
 	}
 
-	public boolean isFinilized() {
-		return finilized;
+	public boolean isFinalized() {
+		return finalized;
 	}
 
-	public void finilize() {
-		this.finilized = true;
-		if (specialGziped && isFinilized()) {
+	public void finalizeMessage() {
+		this.finalized = true;
+		if (specialGziped && isFinalized()) {
 			try {
 				this.queue.write(L33tTransformation.gzipedConvert(this.queue));
 			} catch (IOException e) {

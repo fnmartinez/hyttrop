@@ -77,7 +77,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
             }
             if (messageFinilized(httpMessage)) {
                 if (logger.isDebugEnabled()) logger.debug("Message finalized.");
-                httpMessage.finilize();
+                httpMessage.finalizeMessage();
             }
             return httpMessage;
         }catch (URISyntaxException e1){
@@ -97,7 +97,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     	}
     	if(httpMessage.containsHeader("Content-Length")){
     		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
-            if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + length + " Message body size: "+ httpMessage.getSize());
+            if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + length + " Message body size: " + httpMessage.getSize());
 
     		if(httpMessage.getSize().compareTo(length) == 0){
     			return true;

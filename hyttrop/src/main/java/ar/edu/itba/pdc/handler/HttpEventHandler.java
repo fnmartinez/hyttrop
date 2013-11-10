@@ -46,7 +46,14 @@ public class HttpEventHandler implements EventHandler {
             SocketChannel channel;
             try {
                 String host = httpRequestMessage.getHeader("Host").getValue();
-                channel = SocketChannel.open(new InetSocketAddress(host, DEFAULT_HTTP_PORT));
+                InetSocketAddress address = new InetSocketAddress(host, DEFAULT_HTTP_PORT);
+                if (address.isUnresolved()) {
+                    logger.info("Could not resolve host " + host + ":" + DEFAULT_HTTP_PORT + ". Responding with 404 Not Found.");
+                    httpResponseMessage = HttpResponseMessage.NOT_FOUND;
+                    sendResponseMessage();
+                    return;
+                }
+                channel = SocketChannel.open(address);
                 if (logger.isInfoEnabled()) logger.info("Connection with the origin server " + channel.getRemoteAddress() + " was established successfully.");
 
                 dispatcher.registerChannel(channel, new EventHandler() {
@@ -97,7 +104,7 @@ public class HttpEventHandler implements EventHandler {
 			    int bytesRead = httpRequestMessage.getBody().read(bytes);
                 if (logger.isDebugEnabled()) logger.debug(bytesRead + " bytes in client boyd");
 			    serverSideFacade.outputQueue().enqueue(bytes);
-			    if (httpRequestMessage.isFinilized()) {
+			    if (httpRequestMessage.isFinalized()) {
 			        httpRequestMessage = null;
 			    }
 			}
@@ -119,6 +126,9 @@ public class HttpEventHandler implements EventHandler {
             if (logger.isDebugEnabled()) logger.debug("Read " + bytesRead + " from server. Sending to client.");
             if (logger.isTraceEnabled()) logger.trace(new String(bytes));
             clientSideFacade.outputQueue().enqueue(bytes);
+        }
+        if (httpResponseMessage.isFinalized()) {
+            clientSideFacade.outputQueue().close();
         }
     }
 
