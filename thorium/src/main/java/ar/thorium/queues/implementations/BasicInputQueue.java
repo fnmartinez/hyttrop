@@ -30,16 +30,14 @@ public class BasicInputQueue implements InputQueue {
 	public synchronized int fillFrom(ByteChannel channel) throws IOException {
         int fillRead = 0;
         int read;
-        do {
-            ByteBuffer buffer = bufferFactory.newBuffer();
-            read = channel.read(buffer);
-            if (logger.isDebugEnabled()) logger.debug(read + " bytes read from channel.");
-            if (read > 0) {
-                fillRead += read;
-                bytesRead += read;
-                validator.putInput(Arrays.copyOfRange(buffer.array(), 0, read));
-            }
-        } while (read > 0);
+        ByteBuffer buffer = bufferFactory.newBuffer();
+        read = channel.read(buffer);
+        if (logger.isDebugEnabled()) logger.debug(read + " bytes read from channel.");
+        if (read > 0) {
+            fillRead += read;
+            bytesRead += read;
+            validator.putInput(Arrays.copyOfRange(buffer.array(), 0, read));
+        }
         if (read == -1) {
             closed = true;
         }

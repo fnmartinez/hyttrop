@@ -26,7 +26,6 @@ public class ByteArrayQueue {
 		}
 
 		byte[] newArr = ArrayUtils.subarray(arr.get(), 0, size);
-		System.out.println(newArr.length);
 		for(int i = 0; i < size; i++){
 			resp[i] = newArr[i];
 		}

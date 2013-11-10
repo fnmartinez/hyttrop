@@ -69,6 +69,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             this.enableReadSelection();
         } catch (Exception e) {
             logger.error("An error occurred while calling this handler.", e);
+            this.die();
         } finally {
             synchronized (stateChangeLock) {
                 this.running = false;
@@ -102,7 +103,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     // If there is output queued, and the channel is ready to
     // accept data, send as much as it will take.
-    private void drainOutput() throws IOException {
+    private synchronized void drainOutput() throws IOException {
         if (((readyOps & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)
                 && (!outputQueue.isEmpty())) {
             if (logger.isTraceEnabled()) logger.trace("Queue drained.");
@@ -126,7 +127,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     // Attempt to fill the input queue with as much data as the channel
     // can provide right now. If end-of-stream is reached, stop read
     // selection and shutdown the input side of the channel.
-    private void fillInput() throws IOException {
+    private synchronized void fillInput() throws IOException {
         if (shuttingDown)
             return;
 
@@ -139,7 +140,12 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
                 if (sc.socket().isConnected()) {
                     try {
-                        sc.socket().shutdownInput();
+                        if (outputQueue.isEmpty() || outputQueue.isClosed()) {
+                            if (logger.isDebugEnabled()) logger.debug("CLOSING THIS SOCKET! AAAAAAAAH!");
+                            sc.socket().close();
+                        } else {
+                            sc.socket().shutdownInput();
+                        }
                     } catch (SocketException e) {
                         // happens sometimes, ignore
                     }

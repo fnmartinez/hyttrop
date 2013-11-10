@@ -32,7 +32,6 @@ public class BasicOutputQueue implements OutputQueue {
 		int bytesWritten = channel.write(bf);
 
         if (logger.isTraceEnabled()) logger.trace(bytesWritten + " bytes written to channel " + channel);
-
         if (bytesWritten > 0) {
             resizeQueue(size - bytesWritten);
             size = queue.length;

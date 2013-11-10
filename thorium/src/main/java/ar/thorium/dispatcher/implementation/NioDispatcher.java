@@ -139,11 +139,12 @@ public class NioDispatcher implements Dispatcher, Runnable {
         try {
             while (true) {
                 try {
-                    if (statusChangeQueue.contains(pair)) {
-
+                    synchronized (statusChangeQueue) {
+                        if (!statusChangeQueue.contains(pair)) {
+                            if (logger.isDebugEnabled()) logger.debug("Enqueing status change for adapter " + adapter);
+                            statusChangeQueue.put(pair);
+                        }
                     }
-                    if (logger.isDebugEnabled()) logger.debug("Enqueing status change for adapter " + adapter);
-                    statusChangeQueue.put(pair);
                     selector.wakeup();
                     return;
                 } catch (InterruptedException e) {
