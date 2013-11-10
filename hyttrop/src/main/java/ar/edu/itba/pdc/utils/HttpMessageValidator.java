@@ -28,27 +28,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     @Override
     public void putInput(byte[] incomming) {
         if (incomming == null || incomming.length == 0) return;
-
-        if (httpMessage == null) {
-            if (logger.isDebugEnabled()) logger.debug("Receiving unknown message.");
-            int newSize = incomming.length + message.length;
-            byte[] newMessage = new byte[newSize];
-            int i, j;
-            for (i = 0; i < message.length; i++) {
-                newMessage[i] = message[i];
-            }
-            for (j = 0; j < incomming.length; j++) {
-                if (incomming[j] == 0) break;
-                newMessage[i + j] = incomming[j];
-            }
-            if (logger.isDebugEnabled()) logger.debug(j + " new bytes received.");
-            message = Arrays.copyOfRange(newMessage, 0, i + j);
-        } else {
-            if (logger.isDebugEnabled()) logger.debug("Receiving new body part");
-            int i;
-            for (i = 0; i < incomming.length && incomming[i] != 0; i++);
-            message = Arrays.copyOf(incomming, i);
-        }
+        if (logger.isDebugEnabled()) logger.debug("Receiving new package, length: "+ incomming.length);
+        message = ArrayUtils.addAll(message, incomming);
     }
 
     @Override
@@ -82,7 +63,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 	}
 
                     // We check that the message next three bytes aren't the last ones.
-                    if ( i + 3 <= message.length -1 && message[i + 4] != 0) {
+                    if ( i + 3 <= message.length -1) {
                         if (logger.isTraceEnabled()) logger.trace("New message comes with body of " + (message.length - (i + 3)) + " bytes");
                         if (logger.isTraceEnabled()) logger.trace(new String(message));
                     	//message.length -1
