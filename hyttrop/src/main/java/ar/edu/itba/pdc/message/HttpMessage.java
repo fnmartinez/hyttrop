@@ -1,27 +1,16 @@
 package ar.edu.itba.pdc.message;
 
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
-import ar.edu.itba.pdc.utils.L33tConversion;
+import ar.edu.itba.pdc.transformations.L33tTransformation;
 import ar.thorium.utils.Message;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public abstract class HttpMessage implements Message {
 
@@ -106,7 +95,7 @@ public abstract class HttpMessage implements Message {
 		addSize(bytes.length);
 		if (!specialGziped && headers.containsKey("Content-Type")) {
 			if (headers.get("Content-Type").getValue().compareTo("text/plain") == 0) {
-				this.queue.write(L33tConversion.convert(bytes));
+				this.queue.write(bytes);
 				return;
 			}
 		}
@@ -141,7 +130,7 @@ public abstract class HttpMessage implements Message {
 		this.finilized = true;
 		if (specialGziped && isFinilized()) {
 			try {
-				this.queue.write(L33tConversion.gzipedConvert(this.queue));
+				this.queue.write(L33tTransformation.gzipedConvert(this.queue));
 			} catch (IOException e) {
                 logger.error(e);
 			}

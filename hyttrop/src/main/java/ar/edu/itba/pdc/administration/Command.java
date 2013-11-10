@@ -1,9 +1,8 @@
 package ar.edu.itba.pdc.administration;
 
 import ar.edu.itba.pdc.administration.AdminProtocol.AdminProtocolActions;
-import ar.thorium.utils.Message;
 
-public interface Command extends Message{
+public interface Command{
 
     String getName();
 

@@ -1,34 +1,39 @@
 package ar.edu.itba.pdc.administration;
 
-import java.util.ArrayList;
-
-import java.util.ArrayList;
+import ar.edu.itba.pdc.transformations.L33tTransformation;
+import ar.edu.itba.pdc.transformations.TransformationChain;
 
 public class SetL33tCommand implements Command {
 
 
     @Override
     public String getName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return "l33t";
     }
 
     @Override
     public String execute(String[] args) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+
+        L33tTransformation t = L33tTransformation.getInstance();
+        TransformationChain transformations = TransformationChain.getInstance();
+        transformations.add(t);
+
+        return "Comando ejecutado correctamente.\n";
     }
 
     @Override
     public String shortHelp() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return "[set|help] l33t [<USERNAME>|all]\n";
     }
 
     @Override
     public String descriptiveHelp() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return "Con este comando se podra activar la transformacion l33t en los usuarios.\n[set|help] l33t [<USERNAME>|all]\n";
     }
 
     @Override
     public boolean acceptsAction(AdminProtocol.AdminProtocolActions action) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        // TODO Auto-generated method stub
+        return true;
     }
 }

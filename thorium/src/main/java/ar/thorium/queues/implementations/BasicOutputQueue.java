@@ -93,4 +93,8 @@ public class BasicOutputQueue implements OutputQueue {
 	public void setChannelFacade(ChannelFacade facede) {
 		this.facade = facede;
 	}
+
+    public byte[] getQueue(){
+        return this.queue;
+    }
 }
