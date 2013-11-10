@@ -4,6 +4,7 @@ import ar.edu.itba.pdc.message.HttpMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.Message;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -11,13 +12,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 public class HttpMessageValidator implements SimpleMessageValidator {
 
     private byte[] message;
     private HttpMessage httpMessage;
     private static Logger logger = Logger.getLogger(HttpMessageValidator.class);
-
 
     public HttpMessageValidator() {
         this.httpMessage = null;
@@ -69,8 +70,8 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     if (logger.isDebugEnabled()) logger.debug(httpMessage);
 
                     for(int j = 1; j < headers.length; j++) {
-                        String[] headerValue = headers[j].split(":");
-                        httpMessage.setHeader(headerValue[0].trim(), headerValue[1].trim());
+                    	int index = headers[j].indexOf(":");
+                        httpMessage.setHeader(headers[j].substring(0, index).trim(), headers[j].substring(index+1).trim());
                     }
                     
                     if(httpMessage.containsHeader("Content-Encoding") && 
@@ -118,6 +119,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     	if(httpMessage.containsHeader("Content-Length")){
     		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
             if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + length + " Message body size: "+ httpMessage.getSize());
+
     		if(httpMessage.getSize().compareTo(length) == 0){
     			return true;
     		}else{
