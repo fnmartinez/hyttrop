@@ -94,10 +94,10 @@ public class BasicSocketAcceptor implements Acceptor {
 				try {
 					SocketChannel client = listenSocket.accept();
 
-                    logger.info("New connection from " + client.getRemoteAddress());
 					if (client == null) {
 						continue;
 					}
+                    logger.info("New connection from " + client.getRemoteAddress());
 
 					dispatcher.registerChannel(client,
 							eventHandlerFactory.newHandler());
