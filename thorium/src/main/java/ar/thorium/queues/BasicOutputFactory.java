@@ -10,7 +10,6 @@ public class BasicOutputFactory extends OutputQueueFactory {
 
 	@Override
 	public OutputQueue newOutputQueue() {
-        logger.info("New output queue created.");
 		return new BasicOutputQueue();
 	}
 

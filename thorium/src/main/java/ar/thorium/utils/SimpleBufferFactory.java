@@ -15,7 +15,6 @@ public class SimpleBufferFactory implements BufferFactory {
 	}
 
 	public ByteBuffer newBuffer() {
-        logger.info("New simple buffer created.");
 		return (ByteBuffer.allocate(capacity));
 	}
 

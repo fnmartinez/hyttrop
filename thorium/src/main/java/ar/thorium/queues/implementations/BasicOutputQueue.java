@@ -1,14 +1,15 @@
 package ar.thorium.queues.implementations;
 
 import ar.thorium.queues.OutputQueue;
-import ar.thorium.utils.BufferFactory;
 import ar.thorium.utils.ChannelFacade;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 
 public class BasicOutputQueue implements OutputQueue {
+    private static Logger logger = Logger.getLogger(BasicOutputQueue.class);
     private final float QUEUE_GROWTH_FACTOR = 1.1f;
 	private byte[] queue;
     private int size;
@@ -25,8 +26,12 @@ public class BasicOutputQueue implements OutputQueue {
 	}
 	
 	public synchronized int drainTo(ByteChannel channel) throws IOException {
+        if (logger.isTraceEnabled()) logger.trace("Draining output in channel " + channel);
+
         ByteBuffer bf = ByteBuffer.wrap(queue);
 		int bytesWritten = channel.write(bf);
+
+        if (logger.isTraceEnabled()) logger.trace(bytesWritten + " bytes written to channel " + channel);
 
         if (bytesWritten > 0) {
             resizeQueue(size - bytesWritten);
@@ -61,6 +66,8 @@ public class BasicOutputQueue implements OutputQueue {
         if (bytes == null || bytes.length == 0) {
             return false;
         }
+        if (logger.isDebugEnabled()) logger.debug("Enqueing " + bytes.length + " bytes");
+        if (logger.isTraceEnabled()) logger.trace(new String(bytes));
 
         if (bytes.length + size >= queue.length) {
             resizeQueue((int)((bytes.length + queue.length) * QUEUE_GROWTH_FACTOR));
@@ -79,6 +86,7 @@ public class BasicOutputQueue implements OutputQueue {
 	}
 
 	public synchronized boolean isClosed(){
+        if (logger.isDebugEnabled()) logger.debug("Closing queue");
 		return close;
 	}
 	

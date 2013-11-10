@@ -31,9 +31,9 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void handleRead(ChannelFacade channelFacade, Message message) {
-        logger.debug("Handling read from client.");
+        if (logger.isDebugEnabled()) logger.debug("Handling read from client; ChannelFacade: " + channelFacade + " Message: " + message);
         if (httpRequestMessage == null) {
-            logger.debug("A message arrived from the client.");
+            if (logger.isTraceEnabled()) logger.trace("A message arrived from the client.");
             httpRequestMessage = (HttpRequestMessage) message;
 
             SocketChannel channel;
@@ -41,30 +41,31 @@ public class HttpEventHandler implements EventHandler {
                 String host = httpRequestMessage.getHeader("Host").getValue();
 //                httpRequestMessage.removeHeader("Accept-Encoding");
                 channel = SocketChannel.open(new InetSocketAddress(host, DEFAULT_HTTP_PORT));
-                logger.debug("Connection with the server was established successfully.");
+                if (logger.isDebugEnabled()) logger.debug("Connection with the origin server " + channel.getRemoteAddress() + "was established successfully.");
                 dispatcher.registerChannel(channel, new EventHandler() {
                     private boolean headersSent = false;
                     @Override
                     public void handleRead(ChannelFacade channelFacade, Message message) {
-						logger.debug("Handling read operation from server.");
+                        if (logger.isDebugEnabled()) logger.debug("Handling read from server; ChannelFacade: " + channelFacade + " Message: " + message);
 						httpResponseMessage = (HttpResponseMessage) message;
                         if(httpResponseMessage.readyToSend()){
 	                        if (!headersSent) {
-	                        	 logger.debug("Receiving HTTP headers.");
+                                if (logger.isDebugEnabled()) logger.debug("Receiving HTTP headers from Server.");
+                                if (logger.isTraceEnabled()) logger.trace(httpResponseMessage.getStatusLine());
 	                            clientSideFacade.outputQueue().enqueue((httpResponseMessage.getStatusLine() + CRLF).getBytes());
-	                            logger.debug("Writing headers back to client.");
 	                            for(HttpHeader header : httpResponseMessage.getHeaders()) {
+                                    if (logger.isTraceEnabled()) logger.trace(header.toString());
 	                                clientSideFacade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
 	                            }
 	                            clientSideFacade.outputQueue().enqueue(CRLF.getBytes());
 	                            headersSent = true;
 	                        }
 	                        int bytesToRead = 0;
-	                        while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {
-	                        	logger.debug("Sending body.");
+	                        while ((bytesToRead = httpResponseMessage.getBody().available()) > 0) {;
 							    byte[] bytes = new byte[bytesToRead];
 							    int bytesRead = httpResponseMessage.getBody().read(bytes);
-							    logger.debug("Read " + bytesRead + " from server. Sending to client.");
+							    if (logger.isDebugEnabled()) logger.debug("Read " + bytesRead + " from server. Sending to client.");
+                                if (logger.isTraceEnabled()) logger.trace(new String(bytes));
 							    clientSideFacade.outputQueue().enqueue(bytes);
 							}
 	                    }else{
@@ -74,16 +75,19 @@ public class HttpEventHandler implements EventHandler {
 
                     @Override
                     public void handleWrite(ChannelFacade channelFacade) {
-                        logger.debug("Handling write operation to server.");
+                        if (logger.isDebugEnabled()) logger.debug("Handling write from server; ChannelFacade: " + channelFacade);
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
 
                     @Override
                     public void handleConnection(ChannelFacade channelFacade) {
-                        logger.debug("Handling connection from server.");
+                        if (logger.isDebugEnabled()) logger.debug("Handling connection from server; ChannelFacade: " + channelFacade);
                         serverSideFacade = channelFacade;
+
+                        if (logger.isTraceEnabled()) logger.trace("Sending HTTP Request to Server; Request Line=\"" + httpRequestMessage.getRequestLine() + "\"");
                         serverSideFacade.outputQueue().enqueue((httpRequestMessage.getRequestLine() + CRLF).getBytes());
                         for(HttpHeader header : httpRequestMessage.getHeaders()) {
+                            if (logger.isTraceEnabled()) logger.trace(header.toString());
                             serverSideFacade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
                         }
                         serverSideFacade.outputQueue().enqueue(CRLF.getBytes());
@@ -91,24 +95,27 @@ public class HttpEventHandler implements EventHandler {
 
                     @Override
                     public void stopped(ChannelFacade channelFacade) {
+                        if (logger.isDebugEnabled()) logger.debug("Server handler stopped; ChannelFacade: " + channelFacade);
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
 
                     @Override
                     public void stopping(ChannelFacade channelFacade) {
+                        if (logger.isDebugEnabled()) logger.debug("Server handler stopping; ChannelFacade: " + channelFacade);
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
                 });
             } catch (IOException e) {
-                logger.error("An unknown error occurred.", e);
+                logger.error(this.toString(), e);
                 throw new UnknownError();  //To change body of catch statement use File | Settings | File Templates.
             }
         } else {
             int bytesToRead = 0;
-            logger.debug("Receiving message from client.");
+            if (logger.isTraceEnabled()) logger.trace("Receiving body from client.");
 			if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
 			    byte[] bytes = new byte[bytesToRead];
 			    int bytesRead = httpRequestMessage.getBody().read(bytes);
+                if (logger.isDebugEnabled()) logger.debug(bytesRead + " bytes in client boyd");
 			    serverSideFacade.outputQueue().enqueue(bytes);
 			    if (httpRequestMessage.isFinilized()) {
 			        httpRequestMessage = null;
@@ -120,24 +127,36 @@ public class HttpEventHandler implements EventHandler {
 
     @Override
     public void handleWrite(ChannelFacade channelFacade) {
-        logger.debug("Handling write to client.");
+        if (logger.isDebugEnabled()) logger.debug("Handling write from client; ChannelFacade: " + channelFacade);
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void handleConnection(ChannelFacade channelFacade) {
-        logger.debug("Handling connection from client.");
+        if (logger.isDebugEnabled()) logger.debug("Handling connection from client; ChannelFacade: " + channelFacade);
         clientSideFacade = channelFacade;
     }
 
     @Override
     public void stopped(ChannelFacade channelFacade) {
+        if (logger.isDebugEnabled()) logger.debug("Client Handler stopping; ChannelFacade: " + channelFacade);
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void stopping(ChannelFacade channelFacade) {
+        if (logger.isDebugEnabled()) logger.debug("Client Handler stopped; ChannelFacade: " + channelFacade);
 		// To change body of implemented methods use File | Settings | File
 		// Templates.
 	}
+
+    @Override
+    public String toString() {
+        return "HttpEventHandler{" +
+                "clientSideFacade=" + clientSideFacade +
+                ", serverSideFacade=" + serverSideFacade +
+                ", httpResponseMessage=" + httpResponseMessage +
+                ", httpRequestMessage=" + httpRequestMessage +
+                '}';
+    }
 }

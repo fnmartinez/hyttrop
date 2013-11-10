@@ -23,7 +23,7 @@ public class HttpRequestMessage extends HttpMessage {
         this.uri = uri;
         this.protocol = protocol;
         this.requestLine = requestLine;
-        logger.debug("Making a request to " + uri);
+        if (logger.isDebugEnabled()) logger.debug("Creating HTTP Request " + this.toString());
     }
 
     public HttpMethod getMethod() {
@@ -40,5 +40,14 @@ public class HttpRequestMessage extends HttpMessage {
 
     public String getRequestLine() {
         return requestLine;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpRequestMessage{" +
+                "method=" + method +
+                ", uri=" + uri +
+                ", protocol='" + protocol + '\'' +
+                '}';
     }
 }
