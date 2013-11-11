@@ -97,4 +97,9 @@ public class BasicOutputQueue implements OutputQueue {
     public byte[] getQueue(){
         return this.queue;
     }
+
+    @Override
+    public void close() {
+        close = true;
+    }
 }

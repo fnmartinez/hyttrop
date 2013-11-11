@@ -8,13 +8,16 @@ public class HttpResponseMessage extends HttpMessage {
 
     public static final HttpResponseMessage INTERAL_SERVER_ERROR_RESPONSE;
     public static final HttpResponseMessage BAD_REQUEST;
+    public static final HttpResponseMessage NOT_FOUND;
     private static Logger logger = Logger.getLogger(HttpResponseMessage.class);
 
 
     static {
         try {
             BAD_REQUEST = new HttpResponseMessage("HTTP/1.1", HttpStatusCode.SC_BAD_REQUEST);
+            BAD_REQUEST.finalizeMessage();
             INTERAL_SERVER_ERROR_RESPONSE = new HttpResponseMessage("HTTP/1.1", HttpStatusCode.SC_INTERNAL_SERVER_ERROR);
+            NOT_FOUND = new HttpResponseMessage("HTTP/1.1", HttpStatusCode.SC_NOT_FOUND);
         } catch (IOException e) {
             logger.fatal("An unknown error occurred while creating 'Bad request' response message.", e);
             throw new UnknownError();

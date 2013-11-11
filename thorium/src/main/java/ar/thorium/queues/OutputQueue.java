@@ -14,5 +14,5 @@ public interface OutputQueue {
 	boolean enqueue(byte[] bytes);
 	public boolean isClosed();
     public byte[] getQueue();
-	
+    void close();
 }

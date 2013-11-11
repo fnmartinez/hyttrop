@@ -140,7 +140,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
                 if (sc.socket().isConnected()) {
                     try {
-                        if (outputQueue.isEmpty() || outputQueue.isClosed()) {
+                        if (outputQueue.isEmpty() && outputQueue.isClosed()) {
                             if (logger.isInfoEnabled()) logger.info("Closing connection: "+ sc.socket().getRemoteSocketAddress());
                             sc.socket().close();
                         } else {

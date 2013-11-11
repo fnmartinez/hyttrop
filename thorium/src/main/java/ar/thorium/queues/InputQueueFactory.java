@@ -6,7 +6,7 @@ import ar.thorium.utils.SimpleBufferFactory;
 
 public abstract class InputQueueFactory {
 	
-	private static BufferFactory defaultBufferFactory = new SimpleBufferFactory(1024);
+	private static BufferFactory defaultBufferFactory = new SimpleBufferFactory(1024*6);
 	
 	public static InputQueueFactory newInstance(MessageValidator validator) {
 		return new BasicInputQueueFactory(defaultBufferFactory, (SimpleMessageValidator)validator);

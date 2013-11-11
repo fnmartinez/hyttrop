@@ -95,11 +95,11 @@ public class BasicSocketAcceptor implements Acceptor {
 					SocketChannel client = listenSocket.accept();
 
 					if (client == null) {
-						continue;
-					}
-                    logger.info("New connection from " + client.getRemoteAddress());
+                        continue;
+                    }
 
-					dispatcher.registerChannel(client,
+                    logger.info("New connection from " + client.getRemoteAddress());
+                    dispatcher.registerChannel(client,
 							eventHandlerFactory.newHandler());
 
 				} catch (ClosedByInterruptException e) {
