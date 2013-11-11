@@ -67,12 +67,16 @@ public class StatisticsWatcher {
 
     public String getStatistics(){
         int currentTime = (int)System.currentTimeMillis()/1000;
-        String statistics = "\nEstadisticas recolectadas durante " + ((currentTime - time) + timeRunning) + " segundos.\n";
-        statistics = statistics.concat("\nBytes transferidos: " + bytesTransferred + "\n");
-        statistics = statistics.concat("\nCantidad de conexiones: " + connectionsQty + "\n");
-        statistics = statistics.concat("\nHistograma de status codes: \n");
+        String statistics = "\n\t>>>>>>>>>>>>Tiempo de muestreo: " + ((currentTime - time) + timeRunning) + " segundos.\n";
+        statistics = statistics.concat("\n\t>>>>>>>>>>>>Bytes transferidos: " + bytesTransferred + "\n");
+        statistics = statistics.concat("\n\t>>>>>>>>>>>>Cantidad de conexiones: " + connectionsQty + "\n");
+        statistics = statistics.concat("\n\t>>>>>>>>>>>>Histograma de status codes: \n");
+        if(statusCodeStatistics.size() == 0){
+            statistics = statistics.concat("\n\t\tSin capturas.\n");
+        }
+
         for(int code : statusCodeStatistics.keySet()){
-            statistics = statistics.concat("\nStatus code: " + code + " -> " + statusCodeStatistics.get(code));
+            statistics = statistics.concat("\n\t\tStatus code: " + code + " -> " + statusCodeStatistics.get(code));
         }
         statistics = statistics.concat("\n");
         return statistics;
