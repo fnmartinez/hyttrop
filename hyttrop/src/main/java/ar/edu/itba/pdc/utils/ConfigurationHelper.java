@@ -13,7 +13,7 @@ public class ConfigurationHelper {
 
     private ConfigurationHelper(){
         try{
-            config = new XMLConfiguration("./hyttrop/src/main/resources/hyttrop.conf");
+            config = new XMLConfiguration("src/main/resources/hyttrop.config");
         }catch(ConfigurationException e){
             logger.fatal("An error occurred while fetching configuration from file.", e);
             throw new ExceptionInInitializerError(e);
