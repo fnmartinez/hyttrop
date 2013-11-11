@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.administration;
 
+import ar.edu.itba.pdc.commands.Command;
 import org.apache.commons.lang.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;

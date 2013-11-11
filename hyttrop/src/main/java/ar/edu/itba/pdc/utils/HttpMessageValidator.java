@@ -2,6 +2,7 @@ package ar.edu.itba.pdc.utils;
 
 import ar.edu.itba.pdc.message.HttpMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
+import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.Message;
 
@@ -78,6 +79,11 @@ public class HttpMessageValidator implements SimpleMessageValidator {
             if (messageFinilized(httpMessage)) {
                 if (logger.isDebugEnabled()) logger.debug("Message finalized.");
                 httpMessage.finalizeMessage();
+
+                StatisticsWatcher w = StatisticsWatcher.getInstance();
+                if(w.isRunning()){
+                    w.updateBytesTransferred(httpMessage.getSize());
+                }
             }
             message = new byte[0];
             return httpMessage;

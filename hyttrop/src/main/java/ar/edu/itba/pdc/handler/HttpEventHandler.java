@@ -4,6 +4,7 @@ import ar.edu.itba.pdc.message.HttpHeader;
 import ar.edu.itba.pdc.message.HttpMessage;
 import ar.edu.itba.pdc.message.HttpRequestMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
+import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import ar.edu.itba.pdc.transformations.TransformationChain;
 import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
@@ -165,6 +166,11 @@ public class HttpEventHandler implements EventHandler {
     public void handleConnection(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Handling connection from client; ChannelFacade: " + channelFacade);
         clientSideFacade = channelFacade;
+
+        StatisticsWatcher w = StatisticsWatcher.getInstance();
+        if(w.isRunning()){
+            w.updateConnectionsQty();
+        }
     }
 
     @Override
