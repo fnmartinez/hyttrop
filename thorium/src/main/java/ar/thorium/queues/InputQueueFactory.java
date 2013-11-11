@@ -8,8 +8,8 @@ public abstract class InputQueueFactory {
 	
 	private static BufferFactory defaultBufferFactory = new SimpleBufferFactory(1024*6);
 	
-	public static InputQueueFactory newInstance(MessageValidator validator) {
-		return new BasicInputQueueFactory(defaultBufferFactory, (SimpleMessageValidator)validator);
+	public static InputQueueFactory newInstance(SimpleMessageValidator validator) {
+		return new BasicInputQueueFactory(defaultBufferFactory, validator);
 	}
 	
 	public static InputQueueFactory newInstance(SimpleMessageValidator validator, BufferFactory bufferFactory) {
