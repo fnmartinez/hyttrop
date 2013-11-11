@@ -58,7 +58,7 @@ public class StatisticsCommand implements Command{
 
     @Override
     public String descriptiveHelp() {
-        return "Con este comando se podra activar, desactivar u obtener el calculo de estadisticas.\n[set|help] statistics [on|off|reset]\n";
+        return "Con este comando se podra activar, desactivar u obtener el calculo de estadisticas.\n[set|get|help] statistics [on|off|reset]\n";
     }
 
     @Override

@@ -6,8 +6,8 @@ public class StatisticsWatcher {
 
     private static StatisticsWatcher INSTANCE = null;
     private static boolean running = false;
-    private long timeRunning = 0;
-    private long time;
+    private int timeRunning = 0;
+    private int time;
     private HashMap<Integer, Integer> statusCodeStatistics = new HashMap<>();
     private int bytesTransferred = 0;
     private int connectionsQty = 0;
@@ -39,13 +39,14 @@ public class StatisticsWatcher {
     }
 
     public void start(){
-        time = System.currentTimeMillis()/1000;
+        time = ((int)System.currentTimeMillis())/1000;
         this.running = true;
     }
 
     public void stop(){
-        time = (System.currentTimeMillis()/1000) - time;
+        time = (((int)System.currentTimeMillis())/1000) - time;
         timeRunning += time;
+        time = 0;
         this.running = false;
     }
 
@@ -65,7 +66,8 @@ public class StatisticsWatcher {
     }
 
     public String getStatistics(){
-        String statistics = "";
+        int currentTime = (int)System.currentTimeMillis()/1000;
+        String statistics = "\nEstadisticas recolectadas durante " + ((currentTime - time) + timeRunning) + " segundos.\n";
         statistics = statistics.concat("\nBytes transferidos: " + bytesTransferred + "\n");
         statistics = statistics.concat("\nCantidad de conexiones: " + connectionsQty + "\n");
         statistics = statistics.concat("\nHistograma de status codes: \n");

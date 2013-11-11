@@ -21,7 +21,7 @@ public class ConfigurationHelper {
 
     private ConfigurationHelper(){
         try{
-            config = new XMLConfiguration("/home/facundo/workspace/pdc2013b/hyttrop/src/main/resources/hyttrop.config");
+            config = new XMLConfiguration("./hyttrop/src/main/resources/hyttrop.conf");
             try {
                 proxyPort = config.getInt("proxy.port", DEFAULT_PROXY_PORT);
             } catch (ConversionException ce) {
