@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.message;
 
+import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -39,6 +40,11 @@ public class HttpResponseMessage extends HttpMessage {
         this.statusCode = statusCode;
         this.code = intStatusCode;
         this.reasonPhrase = reasonPhrase;
+
+        StatisticsWatcher w = StatisticsWatcher.getInstance();
+        if(w.isRunning()){
+            w.updateStatusCodeStatistics(code);
+        }
     }
 
     public String getProtocol(){

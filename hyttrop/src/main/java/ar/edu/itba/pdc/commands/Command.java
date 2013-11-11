@@ -1,4 +1,4 @@
-package ar.edu.itba.pdc.administration;
+package ar.edu.itba.pdc.commands;
 
 import ar.edu.itba.pdc.administration.AdminProtocol.AdminProtocolActions;
 
