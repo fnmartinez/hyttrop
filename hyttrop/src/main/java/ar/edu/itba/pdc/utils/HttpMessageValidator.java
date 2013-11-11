@@ -53,7 +53,6 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     	int index = headers[j].indexOf(":");
                         httpMessage.setHeader(headers[j].substring(0, index).trim(), headers[j].substring(index+1).trim());
                     }
-                    System.out.println(new String(message));
                     
                     if(httpMessage.containsHeader("Content-Encoding") && 
                 			httpMessage.containsHeader("Content-Type") &&
