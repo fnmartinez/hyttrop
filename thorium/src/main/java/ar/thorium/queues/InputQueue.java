@@ -13,4 +13,5 @@ public interface InputQueue {
     int size();
     boolean isClosed();
     Message getMessage();
+    void close();
 }

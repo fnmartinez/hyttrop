@@ -122,7 +122,8 @@ public class NioDispatcher implements Dispatcher, Runnable {
             releaseSelector();
         }
 
-        adapter.unregistered();    }
+        adapter.unregistered();
+    }
 
     private void releaseSelector() {
         guard.releaseSelector();

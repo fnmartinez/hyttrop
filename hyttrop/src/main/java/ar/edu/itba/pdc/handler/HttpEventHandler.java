@@ -175,6 +175,14 @@ public class HttpEventHandler implements EventHandler {
     @Override
     public void stopping(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Client Handler stopped; ChannelFacade: " + channelFacade);
+        if (clientSideFacade != null) {
+            clientSideFacade.outputQueue().close();
+            clientSideFacade.inputQueue().close();
+        }
+        if (serverSideFacade != null) {
+            serverSideFacade.outputQueue().close();
+            serverSideFacade.inputQueue().close();
+        }
 	}
 
     @Override

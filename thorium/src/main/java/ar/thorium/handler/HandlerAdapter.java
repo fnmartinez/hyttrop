@@ -82,7 +82,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     // --------------------------------------------------
     // Private helper methods
 
-    // These three methods manipulate the private copy of the selection
+    // These four methods manipulate the private copy of the selection
     // interest flags. Upon completion, this local copy will be copied
     // back to the SelectionKey as the new interest set.
     private void enableWriteSelection() {
