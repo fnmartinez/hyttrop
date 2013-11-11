@@ -117,7 +117,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
             disableWriteSelection();
 
             if (shuttingDown || outputQueue.isClosed()) {
-                if (logger.isTraceEnabled()) logger.trace("Channel was closed.");
+                if (logger.isInfoEnabled()) logger.info("Channel was closed.");
                 channel.close();
                 eventHandler.stopped(this);
             }
@@ -140,8 +140,8 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
                 if (sc.socket().isConnected()) {
                     try {
-                        if (outputQueue.isEmpty() || outputQueue.isClosed()) {
-                            if (logger.isDebugEnabled()) logger.debug("CLOSING THIS SOCKET! AAAAAAAAH!");
+                        if (outputQueue.isEmpty() && outputQueue.isClosed()) {
+                            if (logger.isInfoEnabled()) logger.info("Closing connection: "+ sc.socket().getRemoteSocketAddress());
                             sc.socket().close();
                         } else {
                             sc.socket().shutdownInput();

@@ -16,6 +16,8 @@ import ar.thorium.handler.EventHandlerFactory;
 import ar.thorium.queues.InputQueueFactory;
 import ar.thorium.queues.MessageValidator;
 import ar.thorium.queues.OutputQueueFactory;
+import ar.thorium.queues.SimpleMessageValidator;
+import ar.thorium.utils.SimpleBufferFactory;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.Logger;
@@ -33,13 +35,13 @@ public enum Hyttrop {
     private final Executor executor;
     private final EventHandlerFactory<?> eventHandlerFactory;
 
-    private <H extends EventHandler> Hyttrop(int port, MessageValidator validator, EventHandlerFactory<H> eventHandlerFactory) throws ExceptionInInitializerError {
+    private <H extends EventHandler> Hyttrop(int port, SimpleMessageValidator validator, EventHandlerFactory<H> eventHandlerFactory) throws ExceptionInInitializerError {
         try{
             this.eventHandlerFactory = eventHandlerFactory;
             this.executor = Executors.newCachedThreadPool();
             SelectorGuard guard = new ReadWriteBlockingGuard();
             OutputQueueFactory outputQueueFactory = OutputQueueFactory.newInstance();
-            InputQueueFactory inputQueueFactory = InputQueueFactory.newInstance(validator);
+            InputQueueFactory inputQueueFactory = InputQueueFactory.newInstance(validator, new SimpleBufferFactory(ConfigurationHelper.getInstance().getBufferSize()));
             this.dispatcher = new NioDispatcher(executor, guard, inputQueueFactory, outputQueueFactory);
             this.acceptor = new BasicSocketAcceptor(port, eventHandlerFactory, dispatcher);
         }catch (IOException e){

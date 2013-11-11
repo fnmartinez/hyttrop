@@ -35,10 +35,11 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     public Message getMessage() {
         try {
             if (logger.isTraceEnabled()) logger.trace("Trying to get a new message.");
+
             if (httpMessage == null) {
                 boolean messageFound = false;
                 int i;
-                for (i = 0; i < message.length && !messageFound; i++) {
+                for (i = 0; i < message.length -3  && !messageFound; i++) {
                     if (message[i] == (byte)'\r' && message[i+1] == (byte)'\n' && message[i+2] == (byte)'\r' && message[i+3] == (byte)'\n') {
                         messageFound = true;
                     }
@@ -53,6 +54,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     	int index = headers[j].indexOf(":");
                         httpMessage.setHeader(headers[j].substring(0, index).trim(), headers[j].substring(index+1).trim());
                     }
+                    System.out.println(new String(message));
                     
                     if(httpMessage.containsHeader("Content-Encoding") && 
                 			httpMessage.containsHeader("Content-Type") &&
@@ -60,7 +62,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                 			httpMessage.getHeader("Content-Type").getValue().compareTo("text/plain") == 0){
                 		httpMessage.setGzipedStream();
                 	}
-
+                    
                     // We check that the message next three bytes aren't the last ones.
                     if ( i + 3 <= message.length -1) {
                         if (logger.isDebugEnabled()) logger.debug("New message comes with body of " + (message.length - (i + 3)) + " bytes");
@@ -68,13 +70,11 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     	//message.length -1
                         httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));
                     }
-                    message = new byte[0];
                 }
             } else {
                 if (logger.isDebugEnabled()) logger.debug("Appending " + message.length + " bytes to body");
                 if (logger.isTraceEnabled()) logger.trace(new String(message));
                 httpMessage.appendToBody(message);
-                message = new byte[0];
             }
             if (messageFinilized(httpMessage)) {
                 if (logger.isDebugEnabled()) logger.debug("Message finalized.");
@@ -85,6 +85,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                     w.updateBytesTransferred(httpMessage.getSize());
                 }
             }
+            message = new byte[0];
             return httpMessage;
         }catch (URISyntaxException e1){
             logger.error("There is something wrong with the URI syntax.", e1);
@@ -110,6 +111,15 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     		}else{
     			return false;
     		}
+    	}
+    	
+    	if(httpMessage.containsHeader("Transfer-Encoding") && 
+        		httpMessage.getHeader("Transfer-Encoding").getValue().compareTo("chunked") == 0){
+    		if(message.length > 5 && message[message.length - 5] == '0' && message[message.length -4] == '\r' && message[message.length-3] == '\n'  && message[message.length -2] == '\r' && message[message.length-1] == '\n'){
+    			return true;
+            }else{
+            	return false;
+            }
     	}
     	return true;
     }

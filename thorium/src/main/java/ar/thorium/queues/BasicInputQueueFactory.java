@@ -10,7 +10,7 @@ public class BasicInputQueueFactory extends InputQueueFactory {
     private static Logger logger = Logger.getLogger(BasicInputQueueFactory.class);
 
     private BufferFactory bufferFactory;
-    private SimpleMessageValidator validator;
+    private MessageValidator validator;
 
     BasicInputQueueFactory(BufferFactory bufferFactory, SimpleMessageValidator validator) {
         this.bufferFactory = bufferFactory;
