@@ -4,6 +4,7 @@ import ar.edu.itba.pdc.message.HttpHeader;
 import ar.edu.itba.pdc.message.HttpMessage;
 import ar.edu.itba.pdc.message.HttpRequestMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
+import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import ar.edu.itba.pdc.transformations.TransformationChain;
 import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
@@ -45,10 +46,11 @@ public class HttpEventHandler implements EventHandler {
             httpRequestMessage = (HttpRequestMessage) message;
             SocketChannel channel;
             try {
-                String host = httpRequestMessage.getHeader("Host").getValue();
-                InetSocketAddress address = new InetSocketAddress(host, DEFAULT_HTTP_PORT);
+                String[] addressPort = httpRequestMessage.getHeader("Host").getValue().split(":");
+                InetSocketAddress address = new InetSocketAddress(addressPort[0],
+                        (addressPort.length == 1 ? DEFAULT_HTTP_PORT: Integer.parseInt(addressPort[addressPort.length - 1])));
                 if (address.isUnresolved()) {
-                    logger.info("Could not resolve host " + host + ":" + DEFAULT_HTTP_PORT + ". Responding with 404 Not Found.");
+                    logger.info("Could not resolve host " + address + ":" + DEFAULT_HTTP_PORT + ". Responding with 404 Not Found.");
                     httpResponseMessage = HttpResponseMessage.NOT_FOUND;
                     sendResponseMessage();
                     return;
@@ -78,8 +80,7 @@ public class HttpEventHandler implements EventHandler {
                         if (logger.isDebugEnabled()) logger.debug("Handling connection from server; ChannelFacade: " + channelFacade);
                         serverSideFacade = channelFacade;
                         if (logger.isTraceEnabled()) logger.trace("Sending HTTP Request to Server; Request Line=\"" + httpRequestMessage.getRequestLine() + "\"");
-                        serverSideFacade.outputQueue().enqueue((httpRequestMessage.getRequestLine() + CRLF).getBytes());
-                        sendHeaders(serverSideFacade, httpRequestMessage);
+                        sendRequestMessage();
                     }
 
                     @Override
@@ -97,18 +98,18 @@ public class HttpEventHandler implements EventHandler {
                 throw new UnknownError();
             }
         } else {
-            int bytesToRead = 0;
             if (logger.isTraceEnabled()) logger.trace("Receiving body from client.");
-			if ((bytesToRead = httpRequestMessage.getBody().available())>0) {
-			    byte[] bytes = new byte[bytesToRead];
-			    int bytesRead = httpRequestMessage.getBody().read(bytes);
-                if (logger.isDebugEnabled()) logger.debug(bytesRead + " bytes in client boyd");
-			    serverSideFacade.outputQueue().enqueue(bytes);
-			    if (httpRequestMessage.isFinalized()) {
-			        httpRequestMessage = null;
-			    }
-			}
+            sendBody(serverSideFacade, httpRequestMessage);
+            if (httpRequestMessage.isFinalized()) {
+                httpRequestMessage = null;
+            }
         }
+    }
+
+    private void sendRequestMessage() {
+        serverSideFacade.outputQueue().enqueue((httpRequestMessage.getRequestLine() + CRLF).getBytes());
+        sendHeaders(serverSideFacade, httpRequestMessage);
+        sendBody(serverSideFacade, httpRequestMessage);
     }
 
     private void sendResponseMessage() {
@@ -128,6 +129,7 @@ public class HttpEventHandler implements EventHandler {
             clientSideFacade.outputQueue().enqueue(bytes);
         }
         if (httpResponseMessage.isFinalized()) {
+            httpResponseMessage = null;
             clientSideFacade.outputQueue().close();
         }
     }
@@ -135,9 +137,23 @@ public class HttpEventHandler implements EventHandler {
     private void sendHeaders(ChannelFacade facade, HttpMessage message) {
         for(HttpHeader header : message.getHeaders()) {
             if (logger.isTraceEnabled()) logger.trace(header.toString());
+            if (header.getName().equalsIgnoreCase("Connection")) {
+                header = new HttpHeader("Connection", "close");
+            }
             facade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
         }
         facade.outputQueue().enqueue(CRLF.getBytes());
+    }
+
+    private void sendBody(ChannelFacade facade, HttpMessage message) {
+        int bytesToRead = 0;
+        while ((bytesToRead = message.getBody().available()) > 0) {;
+            byte[] bytes = new byte[bytesToRead];
+            int bytesRead = message.getBody().read(bytes);
+            if (logger.isDebugEnabled()) logger.debug("Read " + bytesRead + " from server. Sending to client.");
+            if (logger.isTraceEnabled()) logger.trace(new String(bytes));
+            facade.outputQueue().enqueue(bytes);
+        }
     }
 
     @Override
@@ -150,6 +166,11 @@ public class HttpEventHandler implements EventHandler {
     public void handleConnection(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Handling connection from client; ChannelFacade: " + channelFacade);
         clientSideFacade = channelFacade;
+
+        StatisticsWatcher w = StatisticsWatcher.getInstance();
+        if(w.isRunning()){
+            w.updateConnectionsQty();
+        }
     }
 
     @Override
