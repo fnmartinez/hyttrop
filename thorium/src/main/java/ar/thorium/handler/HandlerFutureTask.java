@@ -27,16 +27,7 @@ public class HandlerFutureTask extends FutureTask<HandlerAdapter> implements Run
 		dispatcher.enqueueStatusChange(adapter, key);
 
 		try {
-			// Get result returned by call(), or cause
-			// deferred exception to be thrown. We know
-			// the result will be the adapter instance
-			// stored above, so we ignore it.
 			get();
-
-			// Extension point: You may choose to extend the
-			// InputHandler and HandlerAdapter classes to add
-			// methods for handling these exceptions. This
-			// method is still running in the worker thread.
 		} catch (ExecutionException e) {
 			adapter.die();
 			logger.error("Handler died.", e.getCause());
