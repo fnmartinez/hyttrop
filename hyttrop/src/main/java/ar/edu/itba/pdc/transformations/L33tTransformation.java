@@ -3,9 +3,10 @@ package ar.edu.itba.pdc.transformations;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
-
+import java.util.zip.Inflater;
 
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
+
 import org.apache.log4j.Logger;
 
 public class L33tTransformation implements Transformation{
@@ -47,6 +48,25 @@ public class L33tTransformation implements Transformation{
 		}
 	}
 	
+	public static void transformation(byte[] bytes){
+        logger.info("Applying l33t conversion.");
+		for(int i = 0; i< bytes.length; i++){
+			switch(bytes[i]){
+			case 'a': bytes[i] = '4'; break;
+			case 'e': bytes[i] = '3'; break;
+			case 'i': bytes[i] = '1'; break;
+			case 'o': bytes[i] = '0'; break;
+			case 'c': bytes[i] = '<'; break;
+			case 'A': bytes[i] = '4'; break;
+			case 'E': bytes[i] = '3'; break;
+			case 'I': bytes[i] = '1'; break;
+			case 'O': bytes[i] = '0'; break;
+			case 'C': bytes[i] = '<'; break;
+			default: break;
+			}
+		}
+	}
+	
 	public static byte[] gzipedConvert(ByteArrayQueue arr) throws IOException{
 		
 //		try {
@@ -66,11 +86,15 @@ public class L33tTransformation implements Transformation{
 //			e.printStackTrace();
 //		}
 //		return new byte[0];
-//		
+		
+		
 		byte[] test = new byte[arr.available()];
 		arr.read(test);
+		Inflater inflater = new Inflater(true);
+		inflater.setInput(test);
+		System.out.println(inflater.getAdler());
 		GZIPInputStream stream = new GZIPInputStream(new ByteArrayInputStream(test));
-		
+		System.out.println(test.length);
 		int data = 0;
 		while(stream.available() != 0){
 			data = stream.read();

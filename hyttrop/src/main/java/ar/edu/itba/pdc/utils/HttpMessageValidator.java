@@ -12,6 +12,8 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpMessageValidator implements SimpleMessageValidator {
 
@@ -67,12 +69,18 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                         if (logger.isDebugEnabled()) logger.debug("New message comes with body of " + (message.length - (i + 3)) + " bytes");
                         if (logger.isTraceEnabled()) logger.trace(new String(message));
                     	//message.length -1
+//                        if(httpMessage.containsHeader("Transfer-Encoding") && httpMessage.getHeader("Transfer-Encoding").getValue().contains("chunked")){
+//                        	manageChunked();
+//                        }
                         httpMessage.appendToBody(Arrays.copyOfRange(message, i + 3, message.length));
                     }
                 }
             } else {
                 if (logger.isDebugEnabled()) logger.debug("Appending " + message.length + " bytes to body");
                 if (logger.isTraceEnabled()) logger.trace(new String(message));
+//                if(httpMessage.containsHeader("Transfer-Encoding") && httpMessage.getHeader("Transfer-Encoding").getValue().contains("chunked")){
+//                	manageChunked();
+//                }
                 httpMessage.appendToBody(message);
             }
             if (messageFinilized(httpMessage)) {
@@ -97,6 +105,9 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     }
 
     private boolean messageFinilized(HttpMessage httpMessage) {
+    	if(httpMessage.isFinalized()){
+    		return true;
+    	}
         if (logger.isDebugEnabled()) logger.debug("HttpMessageValidator::messageFinilizaed; httpMessage: " + httpMessage);
     	if(httpMessage == null){
     		return false;
@@ -114,12 +125,40 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     	
     	if(httpMessage.containsHeader("Transfer-Encoding") && 
         		httpMessage.getHeader("Transfer-Encoding").getValue().compareTo("chunked") == 0){
-    		if(message.length > 5 && message[message.length - 5] == '0' && message[message.length -4] == '\r' && message[message.length-3] == '\n'  && message[message.length -2] == '\r' && message[message.length-1] == '\n'){
+    		if(httpMessage.getSize().compareTo(httpMessage.getChunkedSize()) == 0){
+    			return true;
+    		}else if(message.length > 5 && message[message.length - 5] == '0' && message[message.length -4] == '\r' && message[message.length-3] == '\n'  && message[message.length -2] == '\r' && message[message.length-1] == '\n'){
     			return true;
             }else{
             	return false;
             }
     	}
     	return true;
+    }
+    
+    private void manageChunked(){
+    	if(httpMessage instanceof HttpResponseMessage){
+            String data = new String(message);
+            Pattern pat = Pattern.compile("[\r\n][0-9a-f]+[\r\n]+");
+            Matcher match = pat.matcher(data);
+            while(match.find()){
+            	if (logger.isInfoEnabled()) logger.info(Integer.parseInt(match.group().replaceAll("[\r\n]", ""), 16));
+            	httpMessage.addChunkedSize(Integer.parseInt(match.group().replaceAll("[\r\n]", ""), 16));
+            	 if(httpMessage.containsHeader("Content-Encoding") && 
+            			 !httpMessage.getHeader("Content-Encoding").getValue().contains("gzip") &&
+            			 httpMessage.containsHeader("Content-Type") && 
+            			 !httpMessage.getHeader("Content-Type").getValue().contains("text/plain")){
+            		httpMessage.addChunkedSize(match.group().length()); 
+            	 }
+            }
+            if(httpMessage.containsHeader("Content-Encoding") && 
+       			 httpMessage.getHeader("Content-Encoding").getValue().contains("gzip") &&
+       			 httpMessage.containsHeader("Content-Type") && 
+       			 httpMessage.getHeader("Content-Type").getValue().contains("text/plain")){
+            	match.replaceAll("");
+            }
+            message = data.getBytes();
+        }
+    	
     }
 }

@@ -22,6 +22,7 @@ public abstract class HttpMessage implements Message {
 	private Integer totalBodySize;
 	private boolean specialGziped;
 	private static Logger logger = Logger.getLogger(HttpMessage.class);
+	private int chunkedSize;
 
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
@@ -72,6 +73,7 @@ public abstract class HttpMessage implements Message {
 		this.specialGziped = false;
 		this.totalBodySize = 0;
 		this.queue = new ByteArrayQueue();
+		this.chunkedSize = 0;
 	}
 
 	public void setGzipedStream() {
@@ -88,6 +90,11 @@ public abstract class HttpMessage implements Message {
 
 	public ByteArrayQueue getBody() {
 		return this.queue;
+	}
+	
+	public void chunkedAppendToBody(byte[] bytes) throws IOException{
+		this.chunkedSize-= bytes.length;
+		this.appendToBody(bytes);
 	}
 
 	public void appendToBody(byte[] bytes) throws IOException {
@@ -128,13 +135,13 @@ public abstract class HttpMessage implements Message {
 
 	public void finalizeMessage() {
 		this.finalized = true;
-		if (specialGziped && isFinalized()) {
-			try {
-				this.queue.write(L33tTransformation.gzipedConvert(this.queue));
-			} catch (IOException e) {
-                logger.error(e);
-			}
-		}
+//		if (specialGziped && isFinalized()) {
+//			try {
+//				this.queue.write(L33tTransformation.gzipedConvert(this.queue));
+//			} catch (IOException e) {
+//                logger.error(e);
+//			}
+//		}
 	}
 
 	public boolean containsHeader(String header) {
@@ -145,5 +152,13 @@ public abstract class HttpMessage implements Message {
 		if (containsHeader(header)) {
 			headers.remove(header);
 		}
+	}
+	
+	public void addChunkedSize(int size){
+		this.chunkedSize += size;
+	}
+	
+	public int getChunkedSize(){
+		return this.chunkedSize;
 	}
 }
