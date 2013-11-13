@@ -68,7 +68,6 @@ public abstract class HttpMessage implements Message {
 
 	public HttpMessage() throws IOException {
 		this.headers = new HashMap<>();
-		byte[] arr = new byte[0];
 		this.finalized = false;
 		this.specialGziped = false;
 		this.totalBodySize = 0;

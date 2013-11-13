@@ -1,7 +1,9 @@
 package ar.edu.itba.pdc.administration;
 
 import ar.edu.itba.pdc.commands.Command;
+
 import org.apache.commons.lang.StringUtils;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -124,7 +126,8 @@ public class AdminProtocol {
         commands.remove(c.getName());
     }
 
-    private String decodeMessage(ByteBuffer message) {
+    @SuppressWarnings("unused")
+	private String decodeMessage(ByteBuffer message) {
         String data = "";
         int old_position = message.position();
         try {

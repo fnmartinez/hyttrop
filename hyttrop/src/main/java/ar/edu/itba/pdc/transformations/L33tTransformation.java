@@ -1,20 +1,10 @@
 package ar.edu.itba.pdc.transformations;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.SequenceInputStream;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.Inflater;
 
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
-
-import org.apache.log4j.Logger;
 
 public class L33tTransformation implements Transformation{
 

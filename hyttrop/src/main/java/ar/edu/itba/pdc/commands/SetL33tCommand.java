@@ -3,7 +3,6 @@ package ar.edu.itba.pdc.commands;
 import ar.edu.itba.pdc.administration.AdminProtocol;
 import ar.edu.itba.pdc.transformations.L33tTransformation;
 import ar.edu.itba.pdc.transformations.TransformationChain;
-import ar.edu.itba.pdc.utils.ByteArrayQueue;
 
 public class SetL33tCommand implements Command {
 
@@ -21,7 +20,8 @@ public class SetL33tCommand implements Command {
             case SET:
                 if(args.length > 2){
 
-                    L33tTransformation t = new L33tTransformation();
+                    @SuppressWarnings("unused")
+					L33tTransformation t = new L33tTransformation();
                     TransformationChain transformations = TransformationChain.getInstance();
 
                     if(args[2].equals("on")){
