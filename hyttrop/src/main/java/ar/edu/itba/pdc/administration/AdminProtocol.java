@@ -17,7 +17,7 @@ public class AdminProtocol {
     public static final String END_OF_RESPONSE = EOL.concat(".").concat(EOL);
     public static final String OK_RESPONSE = "+OK";
     public static final String ERR_RESPONSE = "-ERR";
-    private static final Map<String, Command> commands = new HashMap<String, Command>();
+    private static final Map<String, Command> commands = new HashMap<>();
 
     public enum AdminProtocolActions {
         SET("set"), GET("get"), HELP("help");
@@ -45,22 +45,22 @@ public class AdminProtocol {
     private CharsetDecoder decoder;
     private CharsetEncoder encoder;
 
-    public AdminProtocol() { //constructor, establezco el encoding.
+    public AdminProtocol() {
         this.charset = Charset.forName("UTF-8");
         this.decoder = charset.newDecoder();
         this.encoder = charset.newEncoder();
     }
 
-    public ByteBuffer handleMessage(AdminMessage message) { //a este le mando un bytebuffer con cosas, que serian un mensaje.
+    public ByteBuffer handleMessage(AdminMessage message) {
         String commandLine = message.getMessage();
         String response = interpretCommand(commandLine);
         ByteBuffer encodedResponse = encodeMessage(response);
         return encodedResponse;
     }
 
-    private String interpretCommand(String commandLine) { //llega un mensaje nuevo, veo que es.
+    private String interpretCommand(String commandLine) {
         String[] tokens = commandLine.split("\\s");
-        Command cmd = null;
+        Command cmd;
         if (tokens.length == 1)
         {
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.HELP.string)) {
@@ -72,14 +72,14 @@ public class AdminProtocol {
         if ((cmd = commands.get(tokens[1])) != null) {
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.GET.string)) {
                 if (cmd.acceptsAction(AdminProtocolActions.GET)) {
-                    return cmd.execute(tokens);
+                    return createSuccessResponse(cmd.execute(tokens));
                 } else {
                     return createErrorResponse("This command does not support GET method.\n");
                 }
             }
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.SET.string)) {
                 if (cmd.acceptsAction(AdminProtocolActions.SET)) {
-                    return cmd.execute(tokens);
+                    return createSuccessResponse(cmd.execute(tokens));
                 } else {
                     return createErrorResponse("This command does not support SET method.\n");
                 }
@@ -119,7 +119,7 @@ public class AdminProtocol {
         commands.remove(c.getName());
     }
 
-    private String decodeMessage(ByteBuffer message) { //este agarra el bytebuffer y lo pasa a string.
+    private String decodeMessage(ByteBuffer message) {
         String data = "";
         int old_position = message.position();
         try {
@@ -129,12 +129,12 @@ public class AdminProtocol {
             e.printStackTrace();
             return "";
         }
-        // reset buffer's position to its original so it is not altered:
+
         message.position(old_position);
         return data;
     }
 
-    private ByteBuffer encodeMessage(String message) { //este hace lo opuesto.
+    private ByteBuffer encodeMessage(String message) {
         try {
             return encoder.encode(CharBuffer.wrap(message));
         } catch (CharacterCodingException e) {
