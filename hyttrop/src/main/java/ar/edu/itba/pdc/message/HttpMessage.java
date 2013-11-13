@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.rowset.spi.SyncResolver;
 
 public abstract class HttpMessage implements Message {
 
@@ -112,26 +111,29 @@ public abstract class HttpMessage implements Message {
 	public synchronized void appendToBody(byte[] bytes) throws IOException {
         if (logger.isDebugEnabled()) logger.debug("Appending " + bytes.length + " to body");
 		addSize(bytes.length);
-		if (!specialGziped && headers.containsKey("Content-Type")) {
-			if (headers.get("Content-Type").getValue().compareTo("text/plain") == 0) {
-				this.queue.write(bytes);
+			if(headers.containsKey("Content-Type") && 
+					headers.get("Content-Type").getValue().compareTo("text/plain") == 0){
+				if (!specialGziped) {
+					transformation.transform(bytes);
+					this.queue.write(bytes);
+				}else{
+					if(gzipQueue == null){
+						gzipQueue = new ByteArrayQueue();
+					}
+					transformation.addElements(bytes);
+					byte[] data;
+					while((data = transformation.gzipedConvert(false)).length != 0){
+						this.queue.write(data);
+					}
+				}
 			}else{
 				this.queue.write(bytes);
 			}
-		}else if(specialGziped){
-			if(gzipQueue == null){
-				gzipQueue = new ByteArrayQueue();
-			}
-			gzipQueue.write(bytes);
-			byte[] data;
-			while((data = transformation.gzipedConvert(gzipQueue, false)).length != 0){
-				this.queue.write(data);
-			}
-		}else{
-			this.queue.write(bytes);
-		}
 		
-		
+	}
+	
+	public boolean getSpecialGziped(){
+		return this.specialGziped;
 	}
 
 	public boolean readyToSend() {
@@ -162,7 +164,7 @@ public abstract class HttpMessage implements Message {
 		this.finalized = true;
 		if(specialGziped){
 			byte[] data;
-			while((data = transformation.gzipedConvert(gzipQueue, true)).length != 0){
+			while((data = transformation.gzipedConvert(true)).length != 0){
 				this.queue.write(data);
 			}
 		}

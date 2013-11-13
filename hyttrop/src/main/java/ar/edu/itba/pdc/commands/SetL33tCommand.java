@@ -21,18 +21,17 @@ public class SetL33tCommand implements Command {
             TransformationChain transformations = TransformationChain.getInstance();
 
             if(args[2].equals("on")){
-                transformations.add(t);
-                return "Transformacion l33t encendida.\n";
+                transformations.addL33t();
             }
             else if(args[2].equals("off")){
-                transformations.remove(t);
-                return "Transformacion l33t apagada.\n";
+                transformations.removeL33t();
             }else{
                 return this.shortHelp();
             }
         }else{
             return this.shortHelp();
         }
+		return this.shortHelp();
     }
 
     @Override
