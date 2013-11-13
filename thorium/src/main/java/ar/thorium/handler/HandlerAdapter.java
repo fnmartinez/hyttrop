@@ -126,7 +126,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     // Attempt to fill the input queue with as much data as the channel
     // can provide right now. If end-of-stream is reached, stop read
-    // selection and shutdown the input side of the channel.
+    // selection and stop the input side of the channel.
     private synchronized void fillInput() throws IOException {
         if (shuttingDown)
             return;

@@ -20,59 +20,59 @@ import java.util.List;
  */
 public class BasicSocketAcceptor implements Acceptor {
 
-	private final Dispatcher dispatcher;
-	private final EventHandlerFactory eventHandlerFactory;
-	private final ServerSocketChannel listenSocket;
-	private final Listener listener;
-	private final List<Thread> threads = new ArrayList<Thread>();
-	private static Logger logger = Logger.getLogger(BasicSocketAcceptor.class);
-	private volatile boolean running = true;
+    private static final Logger logger = Logger.getLogger(BasicSocketAcceptor.class);
+    private final Dispatcher dispatcher;
+    private final EventHandlerFactory eventHandlerFactory;
+    private ServerSocketChannel listenSocket;
+    private InetSocketAddress bindingAddress;
+    private Listener listener;
+    private Thread listenerThread;
+    private volatile boolean running = true;
 
-	public BasicSocketAcceptor(int port,
+	public BasicSocketAcceptor(String hostname, int port,
 			EventHandlerFactory eventHandlerFactory, Dispatcher dispatcher) throws IOException {
-		this(new InetSocketAddress(port), eventHandlerFactory, dispatcher);
+		this(new InetSocketAddress(hostname, port), eventHandlerFactory, dispatcher);
 	}
 	
-	public BasicSocketAcceptor(InetSocketAddress listenAddress,
+	public BasicSocketAcceptor(InetSocketAddress bindingAddress,
 			EventHandlerFactory eventHandlerFactory, Dispatcher dispatcher) throws IOException{
+        this.bindingAddress = bindingAddress;
 		this.dispatcher = dispatcher;
 		this.eventHandlerFactory = eventHandlerFactory;
 		this.listenSocket = ServerSocketChannel.open();
-		this.listenSocket.bind(listenAddress);
-		this.listenSocket.configureBlocking(true);
 		this.listener = new Listener();
 	}
 
 	@Override
-	public synchronized Thread newThread() {
-		Thread thread = new Thread(listener);
-		threads.add(thread);
-		thread.start();
+	public synchronized Thread start() {
+        try {
+            this.listenSocket.bind(this.bindingAddress);
+            this.listenSocket.configureBlocking(true);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+		listenerThread = new Thread(listener);
+		listenerThread.start();
 		
-		thread = dispatcher.start();
-		threads.add(thread);
+		dispatcher.start();
 
-		return thread;
+		return listenerThread;
 	}
 
 	@Override
-	public synchronized void shutdown() {
+	public synchronized void stop() {
 
         logger.info("-------------- Shutting down acceptor " + this.toString() + " --------------");
         running = false;
 
-        for(Thread t : this.threads) {
-            if (t.isAlive()) {
-                t.interrupt();
-            }
+        if (listenerThread.isAlive()) {
+            listenerThread.interrupt();
         }
 
-        for(Thread t : this.threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                logger.error("An error occurred.", e);
-            }
+        try {
+            listenerThread.join();
+        } catch (InterruptedException ie) {
+            logger.error("An error ocurred while joining the listener thread", ie);
         }
 
 		try {
@@ -127,4 +127,11 @@ public class BasicSocketAcceptor implements Acceptor {
 		}
 	}
 
+    public InetSocketAddress getBindingAddress() {
+        return this.bindingAddress;
+    }
+
+    public void setBindingAddress(InetSocketAddress bindingAddress) {
+        this.bindingAddress = bindingAddress;
+    }
 }

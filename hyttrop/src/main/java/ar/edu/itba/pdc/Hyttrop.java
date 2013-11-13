@@ -14,12 +14,9 @@ import ar.thorium.dispatcher.implementation.ReadWriteBlockingGuard;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.handler.EventHandlerFactory;
 import ar.thorium.queues.InputQueueFactory;
-import ar.thorium.queues.MessageValidator;
 import ar.thorium.queues.OutputQueueFactory;
 import ar.thorium.queues.SimpleMessageValidator;
 import ar.thorium.utils.SimpleBufferFactory;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.concurrent.Executor;
@@ -27,15 +24,15 @@ import java.util.concurrent.Executors;
 
 public enum Hyttrop {
 
-    HYTTROP(ConfigurationHelper.getInstance().getProxyPort(), new HttpMessageValidator(), new HttpEventHandlerFactory()),
-    ADMINISTRATION(ConfigurationHelper.getInstance().getAdministratorPort(), new AdminMessageValidator(), new AdminHandlerFactory());
+    HYTTROP("0.0.0.0", ConfigurationHelper.getInstance().getProxyPort(), new HttpMessageValidator(), new HttpEventHandlerFactory()),
+    ADMINISTRATION("127.0.0.1", ConfigurationHelper.getInstance().getAdministratorPort(), new AdminMessageValidator(), new AdminHandlerFactory());
 
     private final Dispatcher dispatcher;
     private final Acceptor acceptor;
     private final Executor executor;
     private final EventHandlerFactory<?> eventHandlerFactory;
 
-    private <H extends EventHandler> Hyttrop(int port, SimpleMessageValidator validator, EventHandlerFactory<H> eventHandlerFactory) throws ExceptionInInitializerError {
+    private <H extends EventHandler> Hyttrop(String hostname, int port, SimpleMessageValidator validator, EventHandlerFactory<H> eventHandlerFactory) throws ExceptionInInitializerError {
         try{
             this.eventHandlerFactory = eventHandlerFactory;
             this.executor = Executors.newCachedThreadPool();
@@ -43,7 +40,7 @@ public enum Hyttrop {
             OutputQueueFactory outputQueueFactory = OutputQueueFactory.newInstance();
             InputQueueFactory inputQueueFactory = InputQueueFactory.newInstance(validator, new SimpleBufferFactory(ConfigurationHelper.getInstance().getBufferSize()));
             this.dispatcher = new NioDispatcher(executor, guard, inputQueueFactory, outputQueueFactory);
-            this.acceptor = new BasicSocketAcceptor(port, eventHandlerFactory, dispatcher);
+            this.acceptor = new BasicSocketAcceptor(hostname, port, eventHandlerFactory, dispatcher);
         }catch (IOException e){
             Logger logger = Logger.getLogger(Hyttrop.class);
             logger.fatal("Servers could not be initialized.", e);
@@ -58,7 +55,7 @@ public enum Hyttrop {
     }
 
     public void start() {
-        this.acceptor.newThread();
+        this.acceptor.start();
     }
 
     public Dispatcher getDispatcher() {

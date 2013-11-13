@@ -6,6 +6,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
+import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
+
 public class ConfigurationHelper {
 
     private static final int DEFAULT_PROXY_PORT = 8080;
@@ -18,6 +21,7 @@ public class ConfigurationHelper {
     private int proxyPort;
     private int adminPort;
     private int bufferSize;
+    private InetSocketAddress defaultOriginServerAddress;
 
     private ConfigurationHelper(){
         try{
@@ -26,16 +30,31 @@ public class ConfigurationHelper {
                 proxyPort = config.getInt("proxy.port", DEFAULT_PROXY_PORT);
             } catch (ConversionException ce) {
                 proxyPort = DEFAULT_PROXY_PORT;
+            } catch (NoSuchElementException nsee) {
+                proxyPort = DEFAULT_PROXY_PORT;
             }
             try {
                 adminPort = config.getInt("adminServer.port", DEFAULT_ADMIN_PORT);
             } catch (ConversionException ce) {
+                adminPort = DEFAULT_ADMIN_PORT;
+            } catch (NoSuchElementException nsee) {
                 adminPort = DEFAULT_ADMIN_PORT;
             }
             try {
                 bufferSize = config.getInt("thorium.buffer.size", DEFAULT_BUFFER_SIZE);
             } catch (ConversionException ce) {
                 bufferSize = DEFAULT_BUFFER_SIZE;
+            } catch (NoSuchElementException nsee) {
+                bufferSize = DEFAULT_BUFFER_SIZE;
+            }
+            try {
+                String defaultHostname = config.getString("general.origin-server.hostname");
+                int defaultPort = config.getInt("general.origin-server.port");
+                defaultOriginServerAddress = new InetSocketAddress(defaultHostname, defaultPort);
+            } catch (ConversionException ce) {
+                defaultOriginServerAddress = null;
+            } catch (NoSuchElementException nsee) {
+                defaultOriginServerAddress = null;
             }
         }catch(ConfigurationException e){
             logger.fatal("An error occurred while fetching configuration from file.", e);
@@ -51,14 +70,22 @@ public class ConfigurationHelper {
     }
 
     public int getProxyPort(){
-        return config.getInt("proxy.port");
+        return proxyPort;
     }
 
     public int getAdministratorPort(){
-        return config.getInt("adminServer.port");
+        return adminPort;
     }
 
     public int getBufferSize() {
         return bufferSize;
+    }
+
+    public InetSocketAddress getDefaultOriginServerAddress() {
+        return defaultOriginServerAddress;
+    }
+
+    public void setDefaultOriginServerAddress(InetSocketAddress defaultOriginServerAddress) {
+        this.defaultOriginServerAddress = defaultOriginServerAddress;
     }
 }

@@ -1,5 +1,7 @@
 package ar.thorium.acceptor;
 
+import java.io.IOException;
+
 /**
  * This Interface provides basic operations to accept incoming connections to
  * the reactor pattern oriented Server for the framework provided.
@@ -13,10 +15,10 @@ public interface Acceptor {
 	 * @return Spawned thread for the concrete class that accepts incoming
 	 *         messages for the server.
 	 */
-	Thread newThread();
+	Thread start();
 
 	/**
-	 * Sends the signal to implementing class to shutdown incoming connections.
+	 * Sends the signal to implementing class to stop incoming connections.
 	 */
-	void shutdown();
+	void stop();
 }

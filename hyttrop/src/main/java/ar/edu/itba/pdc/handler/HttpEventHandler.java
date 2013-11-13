@@ -6,6 +6,7 @@ import ar.edu.itba.pdc.message.HttpRequestMessage;
 import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import ar.edu.itba.pdc.transformations.TransformationChain;
+import ar.edu.itba.pdc.utils.ConfigurationHelper;
 import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.utils.ChannelFacade;
@@ -46,9 +47,12 @@ public class HttpEventHandler implements EventHandler {
             httpRequestMessage = (HttpRequestMessage) message;
             SocketChannel channel;
             try {
-                String[] addressPort = httpRequestMessage.getHeader("Host").getValue().split(":");
-                InetSocketAddress address = new InetSocketAddress(addressPort[0],
+                InetSocketAddress address = ConfigurationHelper.getInstance().getDefaultOriginServerAddress();
+                if (address == null) {
+                    String[] addressPort = httpRequestMessage.getHeader("Host").getValue().split(":");
+                    address = new InetSocketAddress(addressPort[0],
                         (addressPort.length == 1 ? DEFAULT_HTTP_PORT: Integer.parseInt(addressPort[addressPort.length - 1])));
+                }
                 if (address.isUnresolved()) {
                     logger.info("Could not resolve host " + address + ":" + DEFAULT_HTTP_PORT + ". Responding with 404 Not Found.");
                     httpResponseMessage = HttpResponseMessage.NOT_FOUND;
