@@ -128,16 +128,6 @@ public class HttpEventHandler implements EventHandler {
             int bytesRead = httpResponseMessage.getBody().read(bytes);
             if (logger.isDebugEnabled()) logger.debug("Read " + bytesRead + " from server. Sending to client.");
             if (logger.isTraceEnabled()) logger.trace(new String(bytes));
-            if(httpResponseMessage.containsHeader("Content-Type")) {
-    			if (httpResponseMessage.getHeader("Content-Type").getValue().compareTo("text/plain") == 0) {
-    				if(httpResponseMessage.containsHeader("Content-Encoding") && 
-                			httpResponseMessage.getHeader("Content-Encoding").getValue().compareTo("gzip") == 0){
-    					
-    				}else{
-    					L33tTransformation.transformation(bytes);
-    				}
-    			}
-            }
             clientSideFacade.outputQueue().enqueue(bytes);
         }
         if (httpResponseMessage.isFinalized()) {

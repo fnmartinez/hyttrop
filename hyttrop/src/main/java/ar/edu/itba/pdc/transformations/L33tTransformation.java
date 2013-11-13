@@ -1,7 +1,14 @@
 package ar.edu.itba.pdc.transformations;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.SequenceInputStream;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 
@@ -11,26 +18,13 @@ import org.apache.log4j.Logger;
 
 public class L33tTransformation implements Transformation{
 
-    private static Logger logger = Logger.getLogger(L33tTransformation.class);
+	GZIPInputStream stream;
 
-    private static L33tTransformation INSTANCE = null;
-
-    private L33tTransformation(){
-    }
-
-    private synchronized static void createInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new L33tTransformation();
-        }
-    }
-
-    public static L33tTransformation getInstance() {
-        createInstance();
-        return INSTANCE;
+	public L33tTransformation(){
+    	stream = null;	
     }
 
 	public void transform(byte[] bytes){
-        logger.info("Applying l33t conversion.");
 		for(int i = 0; i< bytes.length; i++){
 			switch(bytes[i]){
 			case 'a': bytes[i] = '4'; break;
@@ -48,61 +42,23 @@ public class L33tTransformation implements Transformation{
 		}
 	}
 	
-	public static void transformation(byte[] bytes){
-        logger.info("Applying l33t conversion.");
-		for(int i = 0; i< bytes.length; i++){
-			switch(bytes[i]){
-			case 'a': bytes[i] = '4'; break;
-			case 'e': bytes[i] = '3'; break;
-			case 'i': bytes[i] = '1'; break;
-			case 'o': bytes[i] = '0'; break;
-			case 'c': bytes[i] = '<'; break;
-			case 'A': bytes[i] = '4'; break;
-			case 'E': bytes[i] = '3'; break;
-			case 'I': bytes[i] = '1'; break;
-			case 'O': bytes[i] = '0'; break;
-			case 'C': bytes[i] = '<'; break;
-			default: break;
-			}
+	//force: true => the queue contains the EOF, in this case it will consume the whole
+	//queue.
+	public byte[] gzipedConvert(ByteArrayQueue queue, boolean force) throws IOException{
+		if(stream == null){
+			stream = new GZIPInputStream(queue);
 		}
-	}
-	
-	public static byte[] gzipedConvert(ByteArrayQueue arr) throws IOException{
-		
-//		try {
-//			Deflater deflater = new Deflater();
-//			Inflater inflater = new Inflater(true);
-//			byte[] compressed = new byte[arr.available()];
-//			System.out.println(arr.available());
-//			arr.read(compressed);
-//			inflater.setInput(compressed);
-//			byte[] descompressed = new byte[inflater.getAdler()];
-//			inflater.inflate(descompressed);
-//			deflater.setInput(convert(descompressed));
-//			System.out.println(deflater.deflate(descompressed));
-//			return descompressed;
-//		} catch (DataFormatException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		return new byte[0];
-		
-		
-		byte[] test = new byte[arr.available()];
-		arr.read(test);
-		Inflater inflater = new Inflater(true);
-		inflater.setInput(test);
-		System.out.println(inflater.getAdler());
-		GZIPInputStream stream = new GZIPInputStream(new ByteArrayInputStream(test));
-		System.out.println(test.length);
-		int data = 0;
-		while(stream.available() != 0){
-			data = stream.read();
-			System.out.print((char)data);
+		byte[] test = new byte[1024];
+		int datasize = 0;
+		//512 size of buffer
+		if(queue.available() > 512 || force){
+			datasize = stream.read(test, 0, 1024);
+			transform(test);
 		}
-		System.out.println(data);
-		
-		return new byte[0];
+		if(datasize == -1){
+			return new byte[0];
+		}
+		return Arrays.copyOf(test, datasize);
 	}
 	
 }
