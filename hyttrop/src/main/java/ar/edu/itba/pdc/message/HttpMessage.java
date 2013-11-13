@@ -28,7 +28,9 @@ public abstract class HttpMessage implements Message {
 	private boolean chunked;
 	private L33tTransformation transformation;
 	private ByteArrayQueue gzipQueue;
-
+	private boolean withLength;
+	private Integer contentLength;
+	
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
         if (logger.isTraceEnabled()) logger.trace("HttpMessage:newMessage; firstLine:" + firstLine);
@@ -76,8 +78,23 @@ public abstract class HttpMessage implements Message {
 		this.chunked = false;
 		this.transformation = new L33tTransformation();
 		this.gzipQueue = null;
+		this.withLength = false;
+		this.contentLength = 0;
 	}
-
+	
+	public boolean getWithLength(){
+		return this.withLength;
+	}
+	
+	public void setContentLength(Integer num){
+		this.withLength = true;
+		this.contentLength = num;
+	}
+	
+	public Integer getContentLength(){
+		return this.contentLength;
+	}
+	
 	public void setGzipedStream() {
 		this.specialGziped = true;
 	}

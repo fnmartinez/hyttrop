@@ -57,6 +57,10 @@ public class HttpMessageValidator implements SimpleMessageValidator {
                         httpMessage.setHeader(headers[j].substring(0, index).trim(), headers[j].substring(index+1).trim());
                     }
                     
+                    if(httpMessage.containsHeader("Content-Length")){
+                    	httpMessage.setContentLength(Integer.parseInt(httpMessage.getHeader("Content-Length").getValue()));
+                    }
+                    
                     removeSpecialHeaders();
                     
                     // We check that the message next three bytes aren't the last ones.
@@ -113,6 +117,9 @@ public class HttpMessageValidator implements SimpleMessageValidator {
         		httpMessage.setChunked();
         		
         	}
+        	if(httpMessage.containsHeader("Content-Length")){
+        		httpMessage.removeHeader("Content-Length");
+        	}
     	}
     }
     
@@ -121,11 +128,10 @@ public class HttpMessageValidator implements SimpleMessageValidator {
     		return true;
     	}
         if (logger.isDebugEnabled()) logger.debug("HttpMessageValidator::messageFinilizaed; httpMessage: " + httpMessage);
-    	if(httpMessage.containsHeader("Content-Length")){
-    		Integer length = Integer.parseInt(httpMessage.getHeader("Content-Length").getValue());
-            if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + length + " Message body size: " + httpMessage.getSize());
+    	if(httpMessage.getWithLength()){
+            if (logger.isDebugEnabled()) logger.debug("Content-Length value: " + httpMessage.getContentLength() + " Message body size: " + httpMessage.getSize());
 
-    		if(httpMessage.getSize().compareTo(length) == 0){
+    		if(httpMessage.getSize().compareTo(httpMessage.getContentLength()) == 0){
     			return true;
     		}else{
     			return false;
