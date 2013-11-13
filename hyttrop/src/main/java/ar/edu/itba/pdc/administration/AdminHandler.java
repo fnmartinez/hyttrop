@@ -12,6 +12,7 @@ public class AdminHandler implements EventHandler {
 
     private AdminProtocol protocol;
     private boolean firstConnection;
+    private String welcomeMessage = "Bienvenido al sistema de administracion de Hyttrop. Ingrese un comando para comenzar...\n";
 
     public AdminHandler(AdminProtocol protocol) {
         this.protocol = protocol;
@@ -28,7 +29,7 @@ public class AdminHandler implements EventHandler {
     public void handleWrite(ChannelFacade channelFacade) {
         if (firstConnection) {
             ByteBuffer bf = ByteBuffer.allocate(1024);
-            bf.put("Bienvenido al sistema de administracion de Hyttrop. Ingrese un comando para comenzar...\n".getBytes());
+            bf.put(this.protocol.createSuccessResponse(welcomeMessage).getBytes());
             channelFacade.outputQueue().enqueue(bf.array());
             firstConnection = false;
         }

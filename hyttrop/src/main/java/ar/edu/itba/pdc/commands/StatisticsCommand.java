@@ -13,42 +13,52 @@ public class StatisticsCommand implements Command{
     @Override
     public String execute(String[] args) {
 
+        AdminProtocol.AdminProtocolActions action = AdminProtocol.AdminProtocolActions.getAction(args[0]);
         StatisticsWatcher w = StatisticsWatcher.getInstance();
-        if(args[0].equals("set")){
-            if(args.length > 2){
 
-                if(args[2].equals("on")){
-                    w.start();
-                    return "Calculo de estadisticas encendido.\n";
+        if (action == null) {
+            return "Unknown Command\n";
+        }
+
+        switch (action) {
+
+            case GET:
+                if(w.isRunning()){
+                    return "Las estadisticas son:\n" + w.getStatistics();
+                }else{
+                    return "El calculo de estadisticas se encuentra apagado. Enciendalo para obtener datos.\n";
                 }
-                else if(args[2].equals("off")){
-                    w.stop();
-                    return "Calculo de estadisticas apagado.\n";
-                }else if(args[2].equals("reset")){
-                    boolean wasRunning = w.isRunning();
-                    w.stop();
-                    w.resetStatistics();
-                    if(wasRunning){
+            case SET:
+                if(args.length > 2){
+
+                    if(args[2].equals("on")){
                         w.start();
-                        return "El calculo de estadisticas se ha reiniciado.\n";
+                        return "Calculo de estadisticas encendido.\n";
+                    }
+                    else if(args[2].equals("off")){
+                        w.stop();
+                        return "Calculo de estadisticas apagado.\n";
+                    }else if(args[2].equals("reset")){
+                        boolean wasRunning = w.isRunning();
+                        w.stop();
+                        w.resetStatistics();
+                        if(wasRunning){
+                            w.start();
+                            return "El calculo de estadisticas se ha reiniciado.\n";
+                        }else{
+                            return "El calculo de estadisticas se ha reiniciado y continua detenido.\n";
+                        }
                     }else{
-                        return "El calculo de estadisticas se ha reiniciado y continua detenido.\n";
+                        return this.shortHelp();
                     }
                 }else{
                     return this.shortHelp();
                 }
-            }else{
-                return this.shortHelp();
-            }
-        }else if(args[0].equals("get")){
-            if(w.isRunning()){
-                return "Las estadisticas son:\n" + w.getStatistics();
-            }else{
-                return "El calculo de estadisticas se encuentra apagado. Enciendalo para obtener datos.\n";
-            }
+            case HELP:
+                return this.descriptiveHelp();
+            default:
+                return "Unsupported message.\n";
         }
-
-        return shortHelp();
     }
 
     @Override
