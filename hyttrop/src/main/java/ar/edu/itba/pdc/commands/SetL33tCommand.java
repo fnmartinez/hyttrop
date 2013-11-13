@@ -15,23 +15,33 @@ public class SetL33tCommand implements Command {
     @Override
     public String execute(String[] args) {
 
-        if(args.length > 2){
+        AdminProtocol.AdminProtocolActions action = AdminProtocol.AdminProtocolActions.getAction(args[0]);
 
-            L33tTransformation t = new L33tTransformation();
-            TransformationChain transformations = TransformationChain.getInstance();
+        switch (action){
+            case SET:
+                if(args.length > 2){
 
-            if(args[2].equals("on")){
-                transformations.addL33t();
-            }
-            else if(args[2].equals("off")){
-                transformations.removeL33t();
-            }else{
-                return this.shortHelp();
-            }
-        }else{
-            return this.shortHelp();
+                    L33tTransformation t = new L33tTransformation();
+                    TransformationChain transformations = TransformationChain.getInstance();
+
+                    if(args[2].equals("on")){
+                    	transformations.addL33t();
+                        return "Transformacion l33t encendida.\n";
+                    }
+                    else if(args[2].equals("off")){
+                    	transformations.removeL33t();
+                        return "Transformacion l33t apagada.\n";
+                    }else{
+                        return this.shortHelp();
+                    }
+                }else{
+                    return this.shortHelp();
+                }
+            case HELP:
+                return this.descriptiveHelp();
+            default:
+                return "Unsupported message.\n";
         }
-		return this.shortHelp();
     }
 
     @Override

@@ -171,7 +171,6 @@ public class HttpEventHandler implements EventHandler {
     @Override
     public void handleWrite(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Handling write from client; ChannelFacade: " + channelFacade);
-        TransformationChain.getInstance().transform(channelFacade.outputQueue().getQueue());
     }
 
     @Override
