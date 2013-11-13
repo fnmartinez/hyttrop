@@ -3,6 +3,7 @@ package ar.edu.itba.pdc.message;
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
 import ar.edu.itba.pdc.transformations.L33tTransformation;
 import ar.thorium.utils.Message;
+
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 
 public abstract class HttpMessage implements Message {
 
@@ -22,7 +24,13 @@ public abstract class HttpMessage implements Message {
 	private Integer totalBodySize;
 	private boolean specialGziped;
 	private static Logger logger = Logger.getLogger(HttpMessage.class);
-
+	private int chunkedSize;
+	private boolean chunked;
+	private L33tTransformation transformation;
+	private ByteArrayQueue gzipQueue;
+	private boolean withLength;
+	private Integer contentLength;
+	
     public static HttpMessage newMessage(String firstLine) throws URISyntaxException, IOException {
 
         if (logger.isTraceEnabled()) logger.trace("HttpMessage:newMessage; firstLine:" + firstLine);
@@ -62,20 +70,41 @@ public abstract class HttpMessage implements Message {
 
 	public HttpMessage() throws IOException {
 		this.headers = new HashMap<>();
-		byte[] arr = new byte[0];
-		// this.privateBody = new ByteArrayOutputStream();
-		// new
-		// ByteArrayInputStream(((ByteArrayOutputStream)this.privateBody).toByteArray());
-		// this.exposedBody = new PipedInputStream(
-		// (PipedOutputStream) this.privateBody);
 		this.finalized = false;
 		this.specialGziped = false;
 		this.totalBodySize = 0;
 		this.queue = new ByteArrayQueue();
+		this.chunkedSize = 0;
+		this.chunked = false;
+		this.transformation = new L33tTransformation();
+		this.gzipQueue = null;
+		this.withLength = false;
+		this.contentLength = 0;
 	}
-
+	
+	public boolean getWithLength(){
+		return this.withLength;
+	}
+	
+	public void setContentLength(Integer num){
+		this.withLength = true;
+		this.contentLength = num;
+	}
+	
+	public Integer getContentLength(){
+		return this.contentLength;
+	}
+	
 	public void setGzipedStream() {
 		this.specialGziped = true;
+	}
+	
+	public void setChunked(){
+		this.chunked = true;
+	}
+	
+	public boolean getChunked(){
+		return this.chunked;
 	}
 
 	public Collection<HttpHeader> getHeaders() {
@@ -89,24 +118,45 @@ public abstract class HttpMessage implements Message {
 	public ByteArrayQueue getBody() {
 		return this.queue;
 	}
+	
+	public void chunkedAppendToBody(byte[] bytes) throws IOException{
+		this.chunkedSize-= bytes.length;
+		this.appendToBody(bytes);
+	}
 
-	public void appendToBody(byte[] bytes) throws IOException {
+	public synchronized void appendToBody(byte[] bytes) throws IOException {
         if (logger.isDebugEnabled()) logger.debug("Appending " + bytes.length + " to body");
 		addSize(bytes.length);
-		if (!specialGziped && headers.containsKey("Content-Type")) {
-			if (headers.get("Content-Type").getValue().compareTo("text/plain") == 0) {
+			if(headers.containsKey("Content-Type") && 
+					headers.get("Content-Type").getValue().compareTo("text/plain") == 0){
+				if (!specialGziped) {
+					transformation.transform(bytes);
+					this.queue.write(bytes);
+				}else{
+					if(gzipQueue == null){
+						gzipQueue = new ByteArrayQueue();
+					}
+					transformation.addElements(bytes);
+					byte[] data;
+					while((data = transformation.gzipedConvert(false)).length != 0){
+						this.queue.write(data);
+					}
+				}
+			}else{
 				this.queue.write(bytes);
-				return;
 			}
-		}
-		this.queue.write(bytes);
+		
+	}
+	
+	public boolean getSpecialGziped(){
+		return this.specialGziped;
 	}
 
 	public boolean readyToSend() {
 		if ((specialGziped && isFinalized()) || (!specialGziped)) {
 			return true;
 		}
-		return false;
+		return true;
 	}
 
 	public void setHeader(final String field, final String content) {
@@ -126,13 +176,12 @@ public abstract class HttpMessage implements Message {
 		return finalized;
 	}
 
-	public void finalizeMessage() {
+	public void finalizeMessage() throws IOException {
 		this.finalized = true;
-		if (specialGziped && isFinalized()) {
-			try {
-				this.queue.write(L33tTransformation.gzipedConvert(this.queue));
-			} catch (IOException e) {
-                logger.error(e);
+		if(specialGziped){
+			byte[] data;
+			while((data = transformation.gzipedConvert(true)).length != 0){
+				this.queue.write(data);
 			}
 		}
 	}
@@ -145,5 +194,13 @@ public abstract class HttpMessage implements Message {
 		if (containsHeader(header)) {
 			headers.remove(header);
 		}
+	}
+	
+	public void addChunkedSize(int size){
+		this.chunkedSize += size;
+	}
+	
+	public int getChunkedSize(){
+		return this.chunkedSize;
 	}
 }

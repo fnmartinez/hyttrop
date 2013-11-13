@@ -1,10 +1,12 @@
 package ar.edu.itba.pdc.utils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang.ArrayUtils;
 
-public class ByteArrayQueue {
+public class ByteArrayQueue extends InputStream {
 
 	private AtomicReference<byte[]> arr;
 	
@@ -16,7 +18,7 @@ public class ByteArrayQueue {
 		arr.set(ArrayUtils.addAll(arr.get(), elems));
 	}
 
-	public synchronized Integer read(byte[] resp) {
+	public synchronized int read(byte[] resp) {
 		int size = 0;
 
 		if(arr.get().length <= resp.length){
@@ -35,12 +37,54 @@ public class ByteArrayQueue {
 		}else{
 			arr.set(new byte[0]);
 		}
-		
 		return size;
 	}
 	
-	public Integer available(){
+	public int available(){
 		return arr.get().length;
+	}
+
+	public void close(){
+	}
+	
+	public void mark(int readlimit){
+	}
+	
+	public boolean markSupported(){
+		return false;
+	}
+	
+	public int read(byte[] b, int off, int len){
+		if(arr.get().length <= len){
+			len = arr.get().length;
+		}
+
+		byte[] newArr = ArrayUtils.subarray(arr.get(), 0, len);
+		for(int i = 0; i < len; i++){
+			b[i] = newArr[i];
+		}
+		
+		if(len < arr.get().length){
+			arr.set(ArrayUtils.subarray(arr.get(), len, arr.get().length));
+		}else{
+			arr.set(new byte[0]);
+		}
+		return len;
+	}
+	
+	public void reset(){
+	}
+	
+	public long skip(long n){
+		return 0l;
+	}
+	
+	
+	@Override
+	public int read() throws IOException {
+		int data = (arr.get()[0] & 0xff);
+		arr.set(ArrayUtils.remove(arr.get(), 0));
+		return data;
 	}
 
 }

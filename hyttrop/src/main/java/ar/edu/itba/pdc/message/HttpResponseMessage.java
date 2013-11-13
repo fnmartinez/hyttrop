@@ -5,8 +5,6 @@ import ar.edu.itba.pdc.utils.ByteArrayQueue;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class HttpResponseMessage extends HttpMessage {
 
