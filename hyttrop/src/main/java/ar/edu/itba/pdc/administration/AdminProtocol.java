@@ -22,10 +22,22 @@ public class AdminProtocol {
     public enum AdminProtocolActions {
         SET("set"), GET("get"), HELP("help");
 
+        public static Map<String, AdminProtocolActions> actionsMap;
+
+        static {
+            actionsMap = new HashMap<>();
+            actionsMap.put(SET.string, SET);
+            actionsMap.put(GET.string, GET);
+            actionsMap.put(HELP.string, HELP);
+        }
         public final String string;
 
         private AdminProtocolActions(String string) {
             this.string = string;
+        }
+
+        public static AdminProtocolActions getAction(String name) {
+            return actionsMap.get(name);
         }
     }
 
@@ -52,6 +64,11 @@ public class AdminProtocol {
         if (tokens.length == 1)
         {
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.HELP.string)) {
+                StringBuilder sb = new StringBuilder();
+                for(Command c : commands.values()) {
+                    sb.append(EOL).append(c.shortHelp());
+                }
+                return createSuccessResponse(sb.toString());
             }
             else{
                 return createErrorResponse("Action unknown or unsupported.\n");
@@ -85,13 +102,12 @@ public class AdminProtocol {
         }
     }
 
-    public String createSuccessResponse(String response) {
-        return OK_RESPONSE.concat(" ").concat(response).concat(END_OF_RESPONSE);
+    public static String createSuccessResponse(String response) {
+        return new StringBuilder().append(OK_RESPONSE).append(" ").append(response).append(END_OF_RESPONSE).toString();
     }
 
-    public String createErrorResponse(String response) {
-        return ERR_RESPONSE.concat(" ").concat(response)
-                .concat(END_OF_RESPONSE);
+    public static String createErrorResponse(String response) {
+        return new StringBuilder().append(ERR_RESPONSE).append(" ").append(response).append(END_OF_RESPONSE).toString();
     }
 
     public void addCommand(Command c) throws UncompliantAdministrativeCommandException {

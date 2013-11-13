@@ -14,7 +14,7 @@ public class BasicOutputQueue implements OutputQueue {
 	private byte[] queue;
     private int size;
 	private ChannelFacade facade;
-	private boolean close = false;
+	private boolean closed = false;
 
 	public BasicOutputQueue() {
 		queue = new byte[0];
@@ -36,7 +36,7 @@ public class BasicOutputQueue implements OutputQueue {
             resizeQueue(size - bytesWritten);
             size = queue.length;
         } else if (bytesWritten == -1) {
-            close = true;
+            closed = true;
         }
 
         return bytesWritten;
@@ -86,7 +86,7 @@ public class BasicOutputQueue implements OutputQueue {
 
 	public synchronized boolean isClosed(){
         if (logger.isDebugEnabled()) logger.debug("Closing queue");
-		return close;
+		return closed;
 	}
 	
 	@Override
@@ -100,6 +100,6 @@ public class BasicOutputQueue implements OutputQueue {
 
     @Override
     public void close() {
-        close = true;
+        closed = true;
     }
 }

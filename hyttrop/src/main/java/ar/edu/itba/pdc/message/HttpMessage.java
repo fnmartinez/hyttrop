@@ -56,7 +56,7 @@ public abstract class HttpMessage implements Message {
             String protocol = firstLineArray[2].trim();
             if (logger.isDebugEnabled()) logger.debug("The new message is a request of kind " + method.toString());
             if (method.equals(HttpMethod.UNKNOWN)) {
-                requestMessage = new HttpRequestMessage(method, new URI("*"), protocol, firstLine);
+                requestMessage = new HttpRequestMessage(method, new URI("*"), protocol);
             } else {
                 URI uri = new URI(firstLineArray[1].trim());
                 requestMessage = new HttpRequestMessage(method, uri, protocol);

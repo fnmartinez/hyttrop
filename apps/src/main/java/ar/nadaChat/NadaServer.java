@@ -29,9 +29,9 @@ public class NadaServer
         EventHandlerFactory<NadaHandler> factory = new NadaProtocol();
         InputQueueFactory inputQueueFactory = InputQueueFactory.newInstance(new NadaValidator(), new SimpleBufferFactory(1024));
         NioDispatcher dispatcher = new NioDispatcher (executor, guard,  inputQueueFactory, outputQueueFactory); //executor, guard, input y output
-        BasicSocketAcceptor acceptor = new BasicSocketAcceptor (1234, factory, dispatcher);
+        BasicSocketAcceptor acceptor = new BasicSocketAcceptor ("0.0.0.0", 1234, factory, dispatcher);
 
-        acceptor.newThread();
+        acceptor.start();
     }
 }
 

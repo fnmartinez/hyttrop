@@ -82,7 +82,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     // --------------------------------------------------
     // Private helper methods
 
-    // These three methods manipulate the private copy of the selection
+    // These four methods manipulate the private copy of the selection
     // interest flags. Upon completion, this local copy will be copied
     // back to the SelectionKey as the new interest set.
     private void enableWriteSelection() {
@@ -126,7 +126,7 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
 
     // Attempt to fill the input queue with as much data as the channel
     // can provide right now. If end-of-stream is reached, stop read
-    // selection and shutdown the input side of the channel.
+    // selection and stop the input side of the channel.
     private synchronized void fillInput() throws IOException {
         if (shuttingDown)
             return;
@@ -232,15 +232,32 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     }
 
     public void unregistering() {
-        eventHandler.stopping(this);
+        try {
+            eventHandler.stopping(this);
+        } catch (Exception e) {
+            logger.error("Sending stopping signal to event handler failed", e);
+        }
     }
 
     public void unregistered() {
-        eventHandler.stopped(this);
+        try {
+            eventHandler.stopped(this);
+        } catch (Exception e) {
+            logger.error("Sending stopped signal to event handler failed", e);
+        }
+        try {
+            if (channel.isOpen()) {
+                channel.close();
+            }
+        } catch (IOException e) {
+            logger.error("Exception thrown while closing channel after unregistering adapter", e);
+        }
     }
 
     public void die() {
         logger.info(this.toString() + " died.");
+        this.inputQueue.close();
+        this.outputQueue.close();
         this.dead = true;
     }
 
@@ -254,13 +271,9 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     protected void issueChange(SelectionKey key) {
         synchronized (stateChangeLock) {
             if (!running) {
-                dispatcher.enqueueStatusChange((HandlerAdapter) this, key);
+                dispatcher.enqueueStatusChange(this, key);
             }
         }
-    }
-
-    public boolean connectionHandled() {
-        return connectionHandled;
     }
 
     @Override

@@ -7,6 +7,7 @@ import ar.edu.itba.pdc.message.HttpResponseMessage;
 import ar.edu.itba.pdc.statistics.StatisticsWatcher;
 import ar.edu.itba.pdc.transformations.L33tTransformation;
 import ar.edu.itba.pdc.transformations.TransformationChain;
+import ar.edu.itba.pdc.utils.ConfigurationHelper;
 import ar.thorium.dispatcher.Dispatcher;
 import ar.thorium.handler.EventHandler;
 import ar.thorium.utils.ChannelFacade;
@@ -48,9 +49,12 @@ public class HttpEventHandler implements EventHandler {
             httpRequestMessage = (HttpRequestMessage) message;
             SocketChannel channel;
             try {
-                String[] addressPort = httpRequestMessage.getHeader("Host").getValue().split(":");
-                InetSocketAddress address = new InetSocketAddress(addressPort[0],
+                InetSocketAddress address = ConfigurationHelper.getInstance().getDefaultOriginServerAddress();
+                if (address == null) {
+                    String[] addressPort = httpRequestMessage.getHeader("Host").getValue().split(":");
+                    address = new InetSocketAddress(addressPort[0],
                         (addressPort.length == 1 ? DEFAULT_HTTP_PORT: Integer.parseInt(addressPort[addressPort.length - 1])));
+                }
                 if (address.isUnresolved()) {
                     logger.info("Could not resolve host " + address + ":" + DEFAULT_HTTP_PORT + ". Responding with 404 Not Found.");
                     httpResponseMessage = HttpResponseMessage.NOT_FOUND;
@@ -97,7 +101,8 @@ public class HttpEventHandler implements EventHandler {
                 });
             } catch (IOException e) {
                 logger.error(this.toString(), e);
-                throw new UnknownError();
+                httpResponseMessage = HttpResponseMessage.INTERNAL_SERVER_ERROR;
+                sendResponseMessage();
             }
         } else {
             if (logger.isTraceEnabled()) logger.trace("Receiving body from client.");
@@ -137,12 +142,17 @@ public class HttpEventHandler implements EventHandler {
     }
 
     private void sendHeaders(ChannelFacade facade, HttpMessage message) {
+        boolean connectionCloseSent = false;
         for(HttpHeader header : message.getHeaders()) {
             if (logger.isTraceEnabled()) logger.trace(header.toString());
             if (header.getName().equalsIgnoreCase("Connection")) {
                 header = new HttpHeader("Connection", "close");
+                connectionCloseSent = true;
             }
             facade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
+        }
+        if (connectionCloseSent) {
+            facade.outputQueue().enqueue((new HttpHeader("Connection", "close").toString() + CRLF).getBytes());
         }
         facade.outputQueue().enqueue(CRLF.getBytes());
     }
@@ -183,6 +193,14 @@ public class HttpEventHandler implements EventHandler {
     @Override
     public void stopping(ChannelFacade channelFacade) {
         if (logger.isDebugEnabled()) logger.debug("Client Handler stopped; ChannelFacade: " + channelFacade);
+        if (clientSideFacade != null) {
+            clientSideFacade.outputQueue().close();
+            clientSideFacade.inputQueue().close();
+        }
+        if (serverSideFacade != null) {
+            serverSideFacade.outputQueue().close();
+            serverSideFacade.inputQueue().close();
+        }
 	}
 
     @Override

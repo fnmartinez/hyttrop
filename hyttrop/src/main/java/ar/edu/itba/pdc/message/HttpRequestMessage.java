@@ -11,18 +11,12 @@ public class HttpRequestMessage extends HttpMessage {
     private HttpMethod method;
     private URI uri;
     private String protocol;
-    private String requestLine;
 
     public HttpRequestMessage(HttpMethod method, URI uri, String protocol) throws IOException {
-        this(method, uri, protocol, method + " " + uri.toASCIIString() + " " + protocol);
-    }
-
-    public HttpRequestMessage(HttpMethod method, URI uri, String protocol, String requestLine) throws IOException {
         super();
         this.method = method;
         this.uri = uri;
         this.protocol = protocol;
-        this.requestLine = requestLine;
         if (logger.isDebugEnabled()) logger.debug("Creating HTTP Request " + this.toString());
     }
 
@@ -39,7 +33,11 @@ public class HttpRequestMessage extends HttpMessage {
     }
 
     public String getRequestLine() {
-        return requestLine;
+        HttpHeader host = null;
+        if ((host = headers.get("Host")) == null || !uri.toASCIIString().contains(host.getValue())) {
+            return method + " " + uri.toASCIIString() + " " + protocol;
+        }
+        return method + " " + uri.toASCIIString().split(host.getValue())[1] + " " + protocol;
     }
 
     @Override

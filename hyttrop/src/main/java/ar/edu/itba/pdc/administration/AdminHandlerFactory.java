@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.administration;
 
-import ar.edu.itba.pdc.commands.SetL33tCommand;
-import ar.edu.itba.pdc.commands.StatisticsCommand;
+import ar.edu.itba.pdc.commands.*;
 import ar.thorium.handler.EventHandlerFactory;
 
 import org.apache.log4j.Logger;
@@ -16,6 +15,9 @@ public class AdminHandlerFactory implements EventHandlerFactory<AdminHandler> {
         try{
             protocol.addCommand(new SetL33tCommand());
             protocol.addCommand(new StatisticsCommand());
+            protocol.addCommand(new ProxyPortCommand());
+            protocol.addCommand(new AdminPortCommand());
+            protocol.addCommand(new DefaultOriginServerCommand());
         }catch (UncompliantAdministrativeCommandException e){
             logger.error("Command is not compliant.");
         }

@@ -28,6 +28,8 @@ public class BasicInputQueue implements InputQueue {
 	}
 
 	public synchronized int fillFrom(ByteChannel channel) throws IOException {
+        if (this.isClosed()) return -1;
+
         int fillRead = 0;
         int read;
         ByteBuffer buffer = bufferFactory.newBuffer();
@@ -65,5 +67,10 @@ public class BasicInputQueue implements InputQueue {
             bytesRead = 0;
         }
         return message;
+    }
+
+    @Override
+    public void close() {
+        closed = true;
     }
 }

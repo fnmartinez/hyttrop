@@ -122,7 +122,8 @@ public class NioDispatcher implements Dispatcher, Runnable {
             releaseSelector();
         }
 
-        adapter.unregistered();    }
+        adapter.unregistered();
+    }
 
     private void releaseSelector() {
         guard.releaseSelector();
@@ -169,8 +170,8 @@ public class NioDispatcher implements Dispatcher, Runnable {
 
     private void invokeHandler(HandlerAdapter adapter, SelectionKey key) {
         try {
-        adapter.prepareToRun(key);
-        adapter.key().interestOps(0);
+            adapter.prepareToRun(key);
+            adapter.key().interestOps(0);
         } catch (CancelledKeyException cke) {
             logger.error("Key has been cancelled", cke);
             adapter.die();
