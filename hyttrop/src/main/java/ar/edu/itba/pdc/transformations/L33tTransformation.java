@@ -1,30 +1,25 @@
 package ar.edu.itba.pdc.transformations;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.SequenceInputStream;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.Inflater;
 
 import ar.edu.itba.pdc.utils.ByteArrayQueue;
 
-import org.apache.log4j.Logger;
-
 public class L33tTransformation implements Transformation{
 
-	GZIPInputStream stream;
+	private GZIPInputStream stream;
+	private ByteArrayQueue queue; 
 
 	public L33tTransformation(){
-    	stream = null;	
+    	stream = null;
+    	queue = new ByteArrayQueue();
     }
 
 	public void transform(byte[] bytes){
+		if(TransformationChain.getInstance().transformationActivated("L33t")){
+			return;
+		}
 		for(int i = 0; i< bytes.length; i++){
 			switch(bytes[i]){
 			case 'a': bytes[i] = '4'; break;
@@ -42,9 +37,13 @@ public class L33tTransformation implements Transformation{
 		}
 	}
 	
+	public void addElements(byte[] data){
+		queue.write(data);
+	}
+	
 	//force: true => the queue contains the EOF, in this case it will consume the whole
 	//queue.
-	public byte[] gzipedConvert(ByteArrayQueue queue, boolean force) throws IOException{
+	public byte[] gzipedConvert(boolean force) throws IOException{
 		if(stream == null){
 			stream = new GZIPInputStream(queue);
 		}

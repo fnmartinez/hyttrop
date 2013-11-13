@@ -5,11 +5,14 @@ import java.util.List;
 
 public class TransformationChain {
     private List<Transformation> transformations;
+    
+    private List<String> classes;
 
     private static TransformationChain INSTANCE = null;
 
     private TransformationChain(){
         this.transformations = new LinkedList<Transformation>();
+        this.classes = new LinkedList<>();
     }
 
     private synchronized static void createInstance() {
@@ -28,7 +31,19 @@ public class TransformationChain {
             t.transform(message);
         }
     }
-
+    
+    public void addL33t(){
+    	this.classes.add("L33t");
+    }
+    
+    public boolean transformationActivated(String name){
+    	return !this.classes.contains(name);
+    }
+    
+    public void removeL33t(){
+    	this.classes.remove("L33t");
+    }
+    
     public void add(Transformation t) {
         this.transformations.add(t);
     }
