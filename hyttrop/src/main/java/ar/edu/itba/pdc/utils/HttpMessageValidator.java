@@ -93,7 +93,7 @@ public class HttpMessageValidator implements SimpleMessageValidator {
         } catch (IOException e) {
 
             logger.error("There was an error with the origin server.");
-            return HttpResponseMessage.INTERAL_SERVER_ERROR_RESPONSE;
+            return HttpResponseMessage.INTERNAL_SERVER_ERROR;
         }
     }
 

@@ -17,12 +17,12 @@ public class DefaultOriginServerCommand implements Command{
     public String execute(String[] args) {
         AdminProtocol.AdminProtocolActions action = AdminProtocol.AdminProtocolActions.getAction(args[0]);
         if (action == null) {
-            return AdminProtocol.createErrorResponse("Unknown Command");
+            return "Unknown Command";
         }
         switch (action) {
             case GET:
                 InetSocketAddress origin = ConfigurationHelper.getInstance().getDefaultOriginServerAddress();
-                return AdminProtocol.createSuccessResponse(origin == null? "No origin server set" : origin.toString());
+                return origin == null? "No origin server set" : origin.toString();
             case SET:
                 try {
                     InetSocketAddress oldOrigin = ConfigurationHelper.getInstance().getDefaultOriginServerAddress();
@@ -30,14 +30,14 @@ public class DefaultOriginServerCommand implements Command{
                     if (!newOrigin.equals(oldOrigin)) {
                         ConfigurationHelper.getInstance().setDefaultOriginServerAddress(newOrigin);
                     }
-                    return AdminProtocol.createSuccessResponse("Default origin server changed successfully");
+                    return "Default origin server changed successfully";
                 } catch (Exception e) {
-                    return AdminProtocol.createErrorResponse("Could not change default origin server");
+                    return "Could not change default origin server";
                 }
             case HELP:
-                return AdminProtocol.createSuccessResponse(this.descriptiveHelp());
+                return this.descriptiveHelp();
             default:
-                return AdminProtocol.createErrorResponse("Unsupported Message");
+                return "Unsupported Message";
         }
     }
 

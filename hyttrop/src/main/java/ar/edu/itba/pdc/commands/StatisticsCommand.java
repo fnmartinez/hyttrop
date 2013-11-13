@@ -53,7 +53,7 @@ public class StatisticsCommand implements Command{
 
     @Override
     public String shortHelp() {
-        return "[set|get|help] statistics [on|off|reset]\n";
+        return "[set|get|help] statistics [on|off|reset]";
     }
 
     @Override

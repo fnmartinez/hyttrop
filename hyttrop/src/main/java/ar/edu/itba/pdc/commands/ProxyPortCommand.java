@@ -20,25 +20,21 @@ public class ProxyPortCommand implements Command{
         }
         switch (action) {
             case GET:
-                return AdminProtocol.createSuccessResponse("\r\nProxy port: " + ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).getBindingAddress().getPort());
+                return "\r\nProxy port: " + ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).getBindingAddress().getPort();
             case SET:
-                try{
-                    Hyttrop.HYTTROP.getAcceptor().stop();
-                    InetSocketAddress oldAddress = ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).getBindingAddress();
-                    InetSocketAddress newAddress = new InetSocketAddress(oldAddress.getHostName(), Integer.parseInt(args[2]));
-                    if (!oldAddress.equals(newAddress)) {
-                        ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).setBindingAddress(newAddress);
-                        Hyttrop.HYTTROP.getAcceptor().start();
-                    }
-                    return AdminProtocol.createSuccessResponse("Port successfully changed\r\nOld port: " +
-                            oldAddress.getPort() + "\r\nNew port: " + newAddress.getPort());
-                } catch (Exception e) {
-                    return AdminProtocol.createErrorResponse("Unnable to change port. You might need to restart proxy");
+                Hyttrop.HYTTROP.getAcceptor().stop();
+                InetSocketAddress oldAddress = ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).getBindingAddress();
+                InetSocketAddress newAddress = new InetSocketAddress(oldAddress.getHostName(), Integer.parseInt(args[2]));
+                if (!oldAddress.equals(newAddress)) {
+                    ((BasicSocketAcceptor)Hyttrop.HYTTROP.getAcceptor()).setBindingAddress(newAddress);
+                    Hyttrop.HYTTROP.getAcceptor().start();
                 }
+                return "Port successfully changed\r\nOld port: " +
+                        oldAddress.getPort() + "\r\nNew port: " + newAddress.getPort();
             case HELP:
-                return AdminProtocol.createSuccessResponse(this.descriptiveHelp());
+                return this.descriptiveHelp();
             default:
-                return AdminProtocol.createErrorResponse("Unsupported Message");
+                return "Unsupported Message";
         }
     }
 

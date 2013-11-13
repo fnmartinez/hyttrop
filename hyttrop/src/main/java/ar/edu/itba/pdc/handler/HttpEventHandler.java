@@ -99,7 +99,8 @@ public class HttpEventHandler implements EventHandler {
                 });
             } catch (IOException e) {
                 logger.error(this.toString(), e);
-                throw new UnknownError();
+                httpResponseMessage = HttpResponseMessage.INTERNAL_SERVER_ERROR;
+                sendResponseMessage();
             }
         } else {
             if (logger.isTraceEnabled()) logger.trace("Receiving body from client.");
@@ -139,12 +140,17 @@ public class HttpEventHandler implements EventHandler {
     }
 
     private void sendHeaders(ChannelFacade facade, HttpMessage message) {
+        boolean connectionCloseSent = false;
         for(HttpHeader header : message.getHeaders()) {
             if (logger.isTraceEnabled()) logger.trace(header.toString());
             if (header.getName().equalsIgnoreCase("Connection")) {
                 header = new HttpHeader("Connection", "close");
+                connectionCloseSent = true;
             }
             facade.outputQueue().enqueue((header.toString() + CRLF).getBytes());
+        }
+        if (connectionCloseSent) {
+            facade.outputQueue().enqueue((new HttpHeader("Connection", "close").toString() + CRLF).getBytes());
         }
         facade.outputQueue().enqueue(CRLF.getBytes());
     }

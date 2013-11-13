@@ -39,22 +39,22 @@ public class BasicSocketAcceptor implements Acceptor {
         this.bindingAddress = bindingAddress;
 		this.dispatcher = dispatcher;
 		this.eventHandlerFactory = eventHandlerFactory;
-		this.listenSocket = ServerSocketChannel.open();
 		this.listener = new Listener();
 	}
 
 	@Override
 	public synchronized Thread start() {
         try {
+            this.listenSocket = ServerSocketChannel.open();
             this.listenSocket.bind(this.bindingAddress);
             this.listenSocket.configureBlocking(true);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.fatal("Cannot start acceptor", e);
+            return null;
         }
-		listenerThread = new Thread(listener);
-		listenerThread.start();
-		
-		dispatcher.start();
+        running = true;
+        listenerThread = new Thread(listener);
+        listenerThread.start();
 
 		return listenerThread;
 	}
@@ -64,6 +64,12 @@ public class BasicSocketAcceptor implements Acceptor {
 
         logger.info("-------------- Shutting down acceptor " + this.toString() + " --------------");
         running = false;
+
+        try {
+            listenSocket.close();
+        } catch (IOException e) {
+            logger.error("An error ocurred while closing the server socket", e);
+        }
 
         if (listenerThread.isAlive()) {
             listenerThread.interrupt();

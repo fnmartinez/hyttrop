@@ -36,7 +36,7 @@ public class SetL33tCommand implements Command {
 
     @Override
     public String shortHelp() {
-        return "[set|help] l33t [on|off]\n";
+        return "[set|help] l33t [on|off]";
     }
 
     @Override

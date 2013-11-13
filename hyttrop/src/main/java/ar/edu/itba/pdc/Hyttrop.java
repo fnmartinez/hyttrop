@@ -55,6 +55,7 @@ public enum Hyttrop {
     }
 
     public void start() {
+        this.dispatcher.start();
         this.acceptor.start();
     }
 

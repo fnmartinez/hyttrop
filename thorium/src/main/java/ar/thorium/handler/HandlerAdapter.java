@@ -232,15 +232,32 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     }
 
     public void unregistering() {
-        eventHandler.stopping(this);
+        try {
+            eventHandler.stopping(this);
+        } catch (Exception e) {
+            logger.error("Sending stopping signal to event handler failed", e);
+        }
     }
 
     public void unregistered() {
-        eventHandler.stopped(this);
+        try {
+            eventHandler.stopped(this);
+        } catch (Exception e) {
+            logger.error("Sending stopped signal to event handler failed", e);
+        }
+        try {
+            if (channel.isOpen()) {
+                channel.close();
+            }
+        } catch (IOException e) {
+            logger.error("Exception thrown while closing channel after unregistering adapter", e);
+        }
     }
 
     public void die() {
         logger.info(this.toString() + " died.");
+        this.inputQueue.close();
+        this.outputQueue.close();
         this.dead = true;
     }
 
@@ -254,13 +271,9 @@ public class HandlerAdapter implements Callable<HandlerAdapter>, ChannelFacade {
     protected void issueChange(SelectionKey key) {
         synchronized (stateChangeLock) {
             if (!running) {
-                dispatcher.enqueueStatusChange((HandlerAdapter) this, key);
+                dispatcher.enqueueStatusChange(this, key);
             }
         }
-    }
-
-    public boolean connectionHandled() {
-        return connectionHandled;
     }
 
     @Override

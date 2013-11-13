@@ -16,11 +16,11 @@ public class AdminPortCommand implements Command {
     public String execute(String[] args) {
         AdminProtocol.AdminProtocolActions action = AdminProtocol.AdminProtocolActions.getAction(args[0]);
         if (action == null) {
-            return AdminProtocol.createErrorResponse("Unknown Command");
+            return "Unknown Command";
         }
         switch (action) {
             case GET:
-                return AdminProtocol.createSuccessResponse("\r\nProxy port: " + ((BasicSocketAcceptor) Hyttrop.ADMINISTRATION.getAcceptor()).getBindingAddress().getPort());
+                return "\r\nProxy port: " + ((BasicSocketAcceptor) Hyttrop.ADMINISTRATION.getAcceptor()).getBindingAddress().getPort();
             case SET:
                 try{
                     Hyttrop.ADMINISTRATION.getAcceptor().stop();
@@ -30,15 +30,15 @@ public class AdminPortCommand implements Command {
                         ((BasicSocketAcceptor)Hyttrop.ADMINISTRATION.getAcceptor()).setBindingAddress(newAddress);
                         Hyttrop.ADMINISTRATION.getAcceptor().start();
                     }
-                    return AdminProtocol.createSuccessResponse("Port successfully changed\r\nOld port: " +
-                            oldAddress.getPort() + "\r\nNew port: " + newAddress.getPort());
+                    return "Port successfully changed\r\nOld port: " +
+                            oldAddress.getPort() + "\r\nNew port: " + newAddress.getPort();
                 } catch (Exception e) {
-                    return AdminProtocol.createErrorResponse("Unnable to change port. You might need to restart proxy");
+                    return "Unnable to change port. You might need to restart proxy";
                 }
             case HELP:
-                return AdminProtocol.createSuccessResponse(this.descriptiveHelp());
+                return this.descriptiveHelp();
             default:
-                return AdminProtocol.createErrorResponse("Unsupported Message");
+                return "Unsupported Message";
         }
     }
 

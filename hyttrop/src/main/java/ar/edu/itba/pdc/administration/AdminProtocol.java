@@ -64,6 +64,11 @@ public class AdminProtocol {
         if (tokens.length == 1)
         {
             if (tokens[0].equalsIgnoreCase(AdminProtocolActions.HELP.string)) {
+                StringBuilder sb = new StringBuilder();
+                for(Command c : commands.values()) {
+                    sb.append(EOL).append(c.shortHelp());
+                }
+                return createSuccessResponse(sb.toString());
             }
             else{
                 return createErrorResponse("Action unknown or unsupported.\n");
